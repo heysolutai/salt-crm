@@ -32,11 +32,21 @@ class WhatsappService {
     async createInstance(instanceName: string) {
         try {
             // UAZAPI: POST /instance/init
+            // Note: UAZAPI allows passing webhook URL directly during initialization
             const response = await this.getClient().post('/instance/init', {
                 name: instanceName,
                 systemName: 'salt-crm',
                 fingerprintProfile: 'chrome',
-                browser: 'chrome'
+                browser: 'chrome',
+                webhook: process.env.WEBHOOK_URL || '',
+                webhook_events: [
+                    "MESSAGES_UPSERT",
+                    "MESSAGES_UPDATE",
+                    "MESSAGES_DELETE",
+                    "SEND_MESSAGE",
+                    "CONNECTION_UPDATE",
+                    "CALL"
+                ]
             });
 
             return response.data;
