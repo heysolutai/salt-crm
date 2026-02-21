@@ -26,7 +26,9 @@ const verifyInternalKey = (req: Request, res: Response, next: Function) => {
 
 // UAZAPI Webhook - receives messages from WhatsApp
 router.post('/uazapi/webhook', async (req: Request, res: Response) => {
-    logger.info('INCOMING UAZAPI WEBHOOK PAYLOAD:', JSON.stringify(req.body, null, 2));
+    console.log('================= INCOMING UAZAPI WEBHOOK PAYLOAD =================');
+    console.log(JSON.stringify(req.body, null, 2));
+    console.log('===================================================================');
     try {
         const message = uazapiService.parseWebhookMessage(req.body);
 
