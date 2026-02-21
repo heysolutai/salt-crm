@@ -165,18 +165,24 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
 
         if (!conversation) return;
 
+        // Determine direction and sender type based on fromMe flag
+        // @ts-ignore
+        const isFromMe = message.fromMe === true;
+        const direction = isFromMe ? 'outbound' : 'inbound';
+        const senderType = isFromMe ? 'agent' : 'client';
+
         // Create message in database
         const dbMessage = await prisma.message.create({
             data: {
                 tenantId,
                 conversationId: conversation.id,
-                direction: 'inbound',
-                senderType: 'client',
+                direction,
+                senderType,
                 content: message.content,
                 contentType: message.contentType,
                 mediaUrl: message.mediaUrl,
                 externalId: message.messageId,
-                status: 'delivered',
+                status: isFromMe ? 'sent' : 'delivered',
             },
             select: {
                 id: true,
@@ -195,7 +201,8 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
             where: { id: conversation.id },
             data: {
                 lastMessageAt: new Date(),
-                unreadCount: { increment: 1 },
+                // Only increment unread count if it's an inbound message from the client
+                ...(isFromMe ? {} : { unreadCount: { increment: 1 } }),
             },
         });
 

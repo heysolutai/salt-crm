@@ -31,6 +31,7 @@ interface WebhookMessage {
     isGroup: boolean;
     senderName?: string;
     chatLid?: string;
+    fromMe?: boolean;
 }
 
 export class UAZAPIService {
@@ -175,9 +176,8 @@ export class UAZAPIService {
 
             // We usually don't want to process messages sent by ourselves in this webhook
             // unless we want to sync outbound messages sent from another device
-            if (message.fromMe) {
-                return null;
-            }
+            // The user requested to see their own messages, so we'll pass it and flag it
+            const fromMe = message.fromMe === true;
 
             // Extract phone from chatid (e.g. 551199999999@s.whatsapp.net -> 551199999999)
             const getPhone = (id?: string) => id ? id.split('@')[0] : '';
