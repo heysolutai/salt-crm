@@ -69,6 +69,26 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
             return;
         }
 
+        // Handle connection updates
+        if (req.body.EventType === 'connection_update' || req.body.event === 'connection.update') {
+            const instanceName = req.body.instanceName || req.body.instance;
+            const state = req.body.data?.state || req.body.state;
+
+            if (instanceName && state) {
+                let newStatus: 'connected' | 'disconnected' | 'pending' | 'banned' = 'pending';
+                if (state === 'open' || state === 'connected') newStatus = 'connected';
+                else if (state === 'close' || state === 'disconnected' || state === 'refused') newStatus = 'disconnected';
+
+                await prisma.whatsappConnection.updateMany({
+                    where: { instanceId: instanceName },
+                    data: { status: newStatus as any }
+                });
+                logger.info(`Updated connection status for ${instanceName} to ${newStatus}`);
+            }
+            res.status(200).json({ success: true, message: 'Connection updated' });
+            return;
+        }
+
         const message = uazapiService.parseWebhookMessage(req.body);
 
         if (!message) {

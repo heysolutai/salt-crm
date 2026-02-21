@@ -49,10 +49,35 @@ class WhatsappService {
                 ]
             });
 
+            // Try explicit webhook registration as fallback
+            await this.registerWebhook(instanceName);
+
             return response.data;
         } catch (error: any) {
             logger.error(`Error creating instance ${instanceName}:`, error.response?.data || error.message);
             throw new AppError('Failed to create WhatsApp instance', 500);
+        }
+    }
+
+    private async registerWebhook(instanceName: string) {
+        try {
+            const webhookUrl = process.env.WEBHOOK_URL || 'https://api.saltdigi.heysolu.com.br/webhooks/uazapi/webhook';
+
+            await this.getClient().post(`/webhook/set/${instanceName}`, {
+                url: webhookUrl,
+                webhook_by_events: false,
+                webhook_base64: false,
+                events: [
+                    "MESSAGES_UPSERT",
+                    "MESSAGES_UPDATE",
+                    "SEND_MESSAGE",
+                    "CONNECTION_UPDATE",
+                    "CALL"
+                ]
+            });
+            logger.info(`Webhook successfully registered for instance ${instanceName}`);
+        } catch (error: any) {
+            logger.error(`Error explicitly registering webhook for ${instanceName}:`, error.response?.data || error.message);
         }
     }
 
