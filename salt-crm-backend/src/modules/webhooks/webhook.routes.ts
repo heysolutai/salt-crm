@@ -9,6 +9,11 @@ const router = Router();
 
 // Internal API key middleware
 const verifyInternalKey = (req: Request, res: Response, next: Function) => {
+    // If no key is configured in .env, allow requests through (common for external webhooks like UAZAPI)
+    if (!env.INTERNAL_API_KEY) {
+        return next();
+    }
+
     const apiKey = req.headers['x-internal-key'] || req.headers['authorization']?.replace('Bearer ', '');
 
     if (!apiKey || apiKey !== env.INTERNAL_API_KEY) {
@@ -21,6 +26,7 @@ const verifyInternalKey = (req: Request, res: Response, next: Function) => {
 
 // UAZAPI Webhook - receives messages from WhatsApp
 router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Response) => {
+    logger.info('INCOMING UAZAPI WEBHOOK PAYLOAD:', JSON.stringify(req.body, null, 2));
     try {
         const message = uazapiService.parseWebhookMessage(req.body);
 
