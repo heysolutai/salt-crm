@@ -161,46 +161,55 @@ export class UAZAPIService {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = payload as any;
 
-            // Only process "messages" event for new messages
-            if (data.EventType !== 'messages') {
+            // Check if it's a message event (Evolution API uses messages.upsert/messages.update, others use EventType)
+            const isMessageEvent =
+                data.EventType === 'messages' ||
+                data.event === 'messages' ||
+                data.event === 'messages.upsert';
+
+            if (!isMessageEvent) {
                 return null;
             }
 
-            const instanceId = data.instanceName;
-            const message = data.message;
+            const instanceId = data.instanceName || data.instance;
+
+            // Evolution API wraps the message in data.message, older UAZAPI uses data.message directly
+            const message = data.data?.message || data.message;
             const chat = data.chat;
 
             if (!instanceId || !message) {
                 return null;
             }
 
-            // We usually don't want to process messages sent by ourselves in this webhook
-            // unless we want to sync outbound messages sent from another device
-            // The user requested to see their own messages, so we'll pass it and flag it
-            const fromMe = message.fromMe === true;
+            // In Evolution API, message.key holds the ID, fromMe, remoteJid
+            const fromMe = message.fromMe === true || message.key?.fromMe === true;
 
-            // Extract phone from chatid (e.g. 551199999999@s.whatsapp.net -> 551199999999)
+            // Extract phone from chatid/remoteJid
             const getPhone = (id?: string) => id ? id.split('@')[0] : '';
-            const phone = getPhone(message.sender_pn || message.chatid || chat?.wa_chatid || chat?.phone);
+            const rawPhoneId = message.key?.remoteJid || message.sender_pn || message.chatid || chat?.wa_chatid || chat?.phone;
+            const phone = getPhone(rawPhoneId);
 
-            if (!phone) {
-                return null;
+            if (!phone || phone === 'status') {
+                return null; // Ignore status broadcasts
             }
 
-            const isGroup = message.isGroup || chat?.wa_isGroup || phone.includes('g.us');
+            const isGroup = message.isGroup || chat?.wa_isGroup || phone.includes('g.us') || (rawPhoneId && rawPhoneId.endsWith('@g.us'));
 
-            let content = message.text || message.conversation || message.caption || '';
+            // Evolution usually puts text in message.message.conversation or message.message.extendedTextMessage.text
+            const msgObj = message.message || message;
+            let content = msgObj.conversation || msgObj.extendedTextMessage?.text || msgObj.text || msgObj.caption || message.text || message.conversation || message.caption || '';
             let contentType: WebhookMessage['contentType'] = 'text';
             let mediaUrl: string | undefined;
 
-            // Map UAZAPI types to ours
-            if (message.type === 'image') contentType = 'image';
-            else if (message.type === 'video') contentType = 'video';
-            else if (message.type === 'audio') contentType = 'audio';
-            else if (message.type === 'document') contentType = 'document';
-            else if (message.type === 'sticker') contentType = 'sticker';
-            else if (message.type === 'location') contentType = 'location';
-            else if (message.type === 'contact') contentType = 'contact';
+            // Map UAZAPI/Evolution types to ours
+            const typeStr = message.messageType || message.type || Object.keys(msgObj)[0];
+            if (typeStr?.includes('image')) contentType = 'image';
+            else if (typeStr?.includes('video')) contentType = 'video';
+            else if (typeStr?.includes('audio')) contentType = 'audio';
+            else if (typeStr?.includes('document')) contentType = 'document';
+            else if (typeStr?.includes('sticker')) contentType = 'sticker';
+            else if (typeStr?.includes('location')) contentType = 'location';
+            else if (typeStr?.includes('contact')) contentType = 'contact';
 
             // Extract media URL if present - UAZAPI might put it in message.url or we might need to fetch it
             if (message.url) {
@@ -212,13 +221,13 @@ export class UAZAPIService {
             return {
                 instanceId,
                 phone,
-                messageId: message.messageid || message.id,
-                content: content || (typeof message.content === 'object' ? JSON.stringify(message.content) : ''),
+                messageId: message.key?.id || message.messageid || message.id,
+                content: content || (typeof content === 'object' ? JSON.stringify(content) : ''),
                 contentType,
                 mediaUrl,
                 timestamp: message.messageTimestamp || Date.now(),
                 isGroup,
-                senderName: message.senderName || chat?.wa_name || chat?.wa_contactName,
+                senderName: message.pushName || message.senderName || chat?.wa_name || chat?.wa_contactName,
                 chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid
             };
         } catch (error) {
