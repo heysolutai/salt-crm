@@ -17,5 +17,10 @@ export const whatsappApi = {
     connect: async (connectionId: string) => {
         const response = await api.get<WhatsAppConnectionResponse>(`/whatsapp/${connectionId}/connect`);
         return response.data;
+    },
+
+    deleteInstance: async (connectionId: string) => {
+        const response = await api.delete<{ success: boolean; message: string }>(`/whatsapp/${connectionId}`);
+        return response.data;
     }
 };

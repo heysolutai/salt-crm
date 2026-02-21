@@ -1949,11 +1949,20 @@ TOOLS DISPONÍVEIS:
     };
 
     const handleRemoveConnection = async (connectionId: string) => {
-      // TODO: Implement delete API
-      toast({
-        title: 'Em desenvolvimento',
-        description: 'A remoção de conexão será disponibilizada em breve.',
-      });
+      try {
+        await whatsappApi.deleteInstance(connectionId);
+        toast({
+          title: 'Conexão removida',
+          description: 'A instância do WhatsApp foi excluída com sucesso.',
+        });
+        setWhatsappConnections(prev => prev.filter((c: any) => c.id !== connectionId));
+      } catch (error) {
+        toast({
+          title: 'Erro ao remover',
+          description: 'Não foi possível excluir a conexão.',
+          variant: 'destructive',
+        });
+      }
     };
 
     const handleRequestMoreSlots = () => {
