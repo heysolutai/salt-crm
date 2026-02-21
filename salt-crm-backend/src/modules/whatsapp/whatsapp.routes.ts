@@ -11,5 +11,6 @@ router.get('/:id/connect', authenticate, whatsappController.connect);
 
 // Public routes (webhooks)
 router.post('/webhook', whatsappController.webhook);
+router.delete('/:id', authenticate, whatsappController.deleteInstance);
 
 export const whatsappRoutes = router;

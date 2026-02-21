@@ -173,7 +173,37 @@ export class WhatsappController {
         } catch (error) {
             next(error);
         }
+
+    // Delete instance
+    async deleteInstance(req: Request, res: Response, next: NextFunction): Promise < void> {
+            try {
+                const { id } = req.params;
+                const tenantId = req.user!.tenantId;
+
+                const connection = await prisma.whatsappConnection.findFirst({
+                    where: { id, tenantId }
+                });
+
+                if(!connection) {
+                    throw new AppError('Connection not found', 404);
+                }
+
+            // Unlink UAZAPI if token exists
+            // @ts-ignore
+            if(connection.instanceToken) {
+            // @ts-ignore
+            await whatsappService.logout(connection.instanceToken);
+        }
+
+        await prisma.whatsappConnection.delete({
+            where: { id }
+        });
+
+        res.status(200).json({ success: true, message: 'Instance deleted successfully' });
+    } catch(error) {
+        next(error);
     }
+}
 }
 
 export const whatsappController = new WhatsappController();
