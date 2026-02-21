@@ -1941,11 +1941,20 @@ TOOLS DISPONÍVEIS:
     };
 
     const handleDisconnect = async (connectionId: string) => {
-      // TODO: Implement disconnect API
-      toast({
-        title: 'Em desenvolvimento',
-        description: 'A desconexão via sistema será disponibilizada em breve.',
-      });
+      try {
+        await whatsappApi.deleteInstance(connectionId);
+        toast({
+          title: 'Conexão desconectada',
+          description: 'A instância do WhatsApp foi desconectada com sucesso.',
+        });
+        setWhatsappConnections(prev => prev.filter((c: any) => c.id !== connectionId));
+      } catch (error) {
+        toast({
+          title: 'Erro ao desconectar',
+          description: 'Não foi possível desconectar.',
+          variant: 'destructive',
+        });
+      }
     };
 
     const handleRemoveConnection = async (connectionId: string) => {
