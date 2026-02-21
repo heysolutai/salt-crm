@@ -30,6 +30,7 @@ interface WebhookMessage {
     timestamp: number;
     isGroup: boolean;
     senderName?: string;
+    chatLid?: string;
 }
 
 export class UAZAPIService {
@@ -159,55 +160,66 @@ export class UAZAPIService {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = payload as any;
 
-            // Validate required fields
-            if (!data.instance || !data.data?.key?.remoteJid) {
+            // Only process "messages" event for new messages
+            if (data.EventType !== 'messages') {
                 return null;
             }
 
-            const phone = data.data.key.remoteJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
-            const isGroup = data.data.key.remoteJid.includes('@g.us');
+            const instanceId = data.instanceName;
+            const message = data.message;
+            const chat = data.chat;
 
-            let content = '';
+            if (!instanceId || !message) {
+                return null;
+            }
+
+            // We usually don't want to process messages sent by ourselves in this webhook
+            // unless we want to sync outbound messages sent from another device
+            if (message.fromMe) {
+                return null;
+            }
+
+            // Extract phone from chatid (e.g. 551199999999@s.whatsapp.net -> 551199999999)
+            const getPhone = (id?: string) => id ? id.split('@')[0] : '';
+            const phone = getPhone(message.sender_pn || message.chatid || chat?.wa_chatid || chat?.phone);
+
+            if (!phone) {
+                return null;
+            }
+
+            const isGroup = message.isGroup || chat?.wa_isGroup || phone.includes('g.us');
+
+            let content = message.text || message.conversation || message.caption || '';
             let contentType: WebhookMessage['contentType'] = 'text';
             let mediaUrl: string | undefined;
 
-            const message = data.data.message;
-            if (message.conversation) {
-                content = message.conversation;
-                contentType = 'text';
-            } else if (message.extendedTextMessage) {
-                content = message.extendedTextMessage.text;
-                contentType = 'text';
-            } else if (message.imageMessage) {
-                contentType = 'image';
-                mediaUrl = message.imageMessage.url;
-                content = message.imageMessage.caption || '';
-            } else if (message.audioMessage) {
-                contentType = 'audio';
-                mediaUrl = message.audioMessage.url;
-            } else if (message.videoMessage) {
-                contentType = 'video';
-                mediaUrl = message.videoMessage.url;
-                content = message.videoMessage.caption || '';
-            } else if (message.documentMessage) {
-                contentType = 'document';
-                mediaUrl = message.documentMessage.url;
-                content = message.documentMessage.fileName || '';
-            } else if (message.stickerMessage) {
-                contentType = 'sticker';
-                mediaUrl = message.stickerMessage.url;
+            // Map UAZAPI types to ours
+            if (message.type === 'image') contentType = 'image';
+            else if (message.type === 'video') contentType = 'video';
+            else if (message.type === 'audio') contentType = 'audio';
+            else if (message.type === 'document') contentType = 'document';
+            else if (message.type === 'sticker') contentType = 'sticker';
+            else if (message.type === 'location') contentType = 'location';
+            else if (message.type === 'contact') contentType = 'contact';
+
+            // Extract media URL if present - UAZAPI might put it in message.url or we might need to fetch it
+            if (message.url) {
+                mediaUrl = message.url;
+            } else if (message.mediaUrl) {
+                mediaUrl = message.mediaUrl;
             }
 
             return {
-                instanceId: data.instance,
+                instanceId,
                 phone,
-                messageId: data.data.key.id,
-                content,
+                messageId: message.messageid || message.id,
+                content: content || (typeof message.content === 'object' ? JSON.stringify(message.content) : ''),
                 contentType,
                 mediaUrl,
-                timestamp: data.data.messageTimestamp * 1000,
+                timestamp: message.messageTimestamp || Date.now(),
                 isGroup,
-                senderName: data.data.pushName,
+                senderName: message.senderName || chat?.wa_name || chat?.wa_contactName,
+                chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid
             };
         } catch (error) {
             logger.error('Failed to parse webhook message:', error);

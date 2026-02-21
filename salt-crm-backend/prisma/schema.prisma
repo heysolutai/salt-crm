@@ -819,6 +819,7 @@ model Conversation {
   whatsappConnection    WhatsappConnection? @relation(fields: [whatsappConnectionId], references: [id])
   
   contactPhone          String             @map("contact_phone")
+  contactLid            String?            @map("contact_lid")
   contactName           String?            @map("contact_name")
   
   status                ConversationStatus @default(ai_handling)

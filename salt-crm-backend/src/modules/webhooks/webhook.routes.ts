@@ -30,6 +30,45 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
     console.log(JSON.stringify(req.body, null, 2));
     console.log('===================================================================');
     try {
+        if (req.body.EventType === 'messages_update') {
+            const event = req.body.event;
+            if (!event || !event.MessageIDs || !event.MessageIDs.length || !event.Type) {
+                res.status(200).json({ success: true, message: 'Invalid status update' });
+                return;
+            }
+
+            const messageId = event.MessageIDs[0];
+            const status = event.Type.toLowerCase();
+
+            const statusMap: Record<string, string> = {
+                sent: 'sent',
+                delivered: 'delivered',
+                read: 'read',
+                failed: 'failed',
+            };
+
+            const mappedStatus = statusMap[status] || 'pending';
+
+            const messageRow = await prisma.message.updateMany({
+                where: { externalId: messageId },
+                data: { status: mappedStatus as any },
+            });
+
+            if (messageRow.count > 0) {
+                const dbMessage = await prisma.message.findFirst({
+                    where: { externalId: messageId },
+                    select: { conversationId: true },
+                });
+
+                if (dbMessage && socketService) {
+                    socketService.emitMessageStatus(dbMessage.conversationId, messageId, mappedStatus);
+                }
+            }
+
+            res.status(200).json({ success: true, message: 'Status updated' });
+            return;
+        }
+
         const message = uazapiService.parseWebhookMessage(req.body);
 
         if (!message) {
@@ -66,6 +105,13 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
             },
             include: { lead: true },
         });
+
+        if (conversation && message.chatLid && conversation.contactLid !== message.chatLid) {
+            await prisma.conversation.update({
+                where: { id: conversation.id },
+                data: { contactLid: message.chatLid }
+            });
+        }
 
         if (!conversation) {
             // Try to find lead by phone
@@ -104,6 +150,8 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
                     leadId: lead.id,
                     whatsappConnectionId: connection.id,
                     contactPhone: message.phone,
+                    // @ts-ignore - Prisma client needs regeneration
+                    contactLid: message.chatLid || null,
                     status: 'ai_handling',
                 },
                 include: { lead: true },
@@ -114,6 +162,8 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
                 socketService.emitNewConversation(tenantId, conversation);
             }
         }
+
+        if (!conversation) return;
 
         // Create message in database
         const dbMessage = await prisma.message.create({
