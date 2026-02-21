@@ -73,6 +73,7 @@ export const whatsappApi = {
     getAll: () => api.get('/whatsapp'),
     create: (name: string, phone?: string) => api.post('/whatsapp/instance', { name, phone }),
     connect: (id: string) => api.get(`/whatsapp/${id}/connect`),
+    deleteInstance: (id: string) => api.delete(`/whatsapp/${id}`),
 };
 
 export default api;
