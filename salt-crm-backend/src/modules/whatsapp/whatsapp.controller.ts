@@ -53,7 +53,9 @@ export class WhatsappController {
                 connection = await prisma.whatsappConnection.update({
                     where: { id: connection.id },
                     data: {
-                        instanceId: token,
+                        instanceId: finalInstanceName,
+                        // @ts-ignore
+                        instanceToken: token,
                         qrCode: qrCode,
                         status: status as any
                     }
@@ -62,7 +64,9 @@ export class WhatsappController {
                 connection = await prisma.whatsappConnection.create({
                     data: {
                         tenantId,
-                        instanceId: token, // Store the token here for later use in getClient
+                        instanceId: finalInstanceName,
+                        // @ts-ignore
+                        instanceToken: token,
                         name: name, // Original display name
                         phoneNumber: phone || '', // Save phone or empty string
                         status: status as any,
@@ -101,7 +105,12 @@ export class WhatsappController {
 
             try {
                 // Call UAZAPI to generate a new QR Code
-                const result = await whatsappService.connectInstance(connection.instanceId, connection.phoneNumber);
+                const result = await whatsappService.connectInstance(
+                    connection.instanceId,
+                    // @ts-ignore
+                    connection.instanceToken || '',
+                    connection.phoneNumber
+                );
 
                 let fetchedQr = null;
 

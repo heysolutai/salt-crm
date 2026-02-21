@@ -790,6 +790,7 @@ model WhatsappConnection {
   tenantId           String         @map("tenant_id")
   tenant             Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   instanceId         String         @unique @map("instance_id")
+  instanceToken      String?        @map("instance_token")
   phoneNumber        String         @map("phone_number")
   name               String?
   type               WhatsappType   @default(business)

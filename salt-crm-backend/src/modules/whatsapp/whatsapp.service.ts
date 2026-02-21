@@ -58,14 +58,14 @@ class WhatsappService {
 
     /**
      * Gets the connection status and QR Code
+     * @param instanceId The name of the instance created
      * @param instanceToken The token of the instance created
      * @param phone (Optional) Phone number if paired via code
      */
-    async connectInstance(instanceToken: string, phone?: string) {
+    async connectInstance(instanceId: string, instanceToken: string, phone?: string) {
         try {
-            // UAZAPI connection endpoint. The exact endpoint wasn't provided for connect, 
-            // but usually it's /instance/connect or just getting the QR code directly from the creation response or status endpoint.
-            // Let's assume /instance/connect with token header for now based on previous code.
+            // UAZAPI connection endpoint requires instance name, not just token
+            // Depending on the API, it might be /instance/connect or /instance/status?id=xxx
             const url = `/instance/connect`;
 
             const payload = phone ? { phone } : {};
