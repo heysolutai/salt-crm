@@ -1,0 +1,158 @@
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+async function main() {
+    console.log('🌱 Starting seed...');
+
+    // Create default tenant
+    const tenant = await prisma.tenant.upsert({
+        where: { slug: 'salt-demo' },
+        update: {},
+        create: {
+            name: 'SALT Demo',
+            slug: 'salt-demo',
+            email: 'contato@saltdigi.com.br',
+            status: 'active',
+        },
+    });
+
+    console.log(`✅ Tenant created: ${tenant.name} (${tenant.id})`);
+
+    // Create admin user
+    const adminPassword = await bcrypt.hash('admin123', 12);
+
+    const admin = await prisma.user.upsert({
+        where: {
+            tenantId_email: {
+                tenantId: tenant.id,
+                email: 'eryk@saltdigi.com.br',
+            },
+        },
+        update: {},
+        create: {
+            email: 'eryk@saltdigi.com.br',
+            name: 'Eryk Silva',
+            password: adminPassword,
+            role: 'admin',
+            tenantId: tenant.id,
+            isActive: true,
+        },
+    });
+
+    console.log(`✅ Admin user created: ${admin.email}`);
+
+    // Create manager user
+    const managerPassword = await bcrypt.hash('123456', 12);
+
+    const manager = await prisma.user.upsert({
+        where: {
+            tenantId_email: {
+                tenantId: tenant.id,
+                email: 'gerente@saltdigi.com.br',
+            },
+        },
+        update: {},
+        create: {
+            email: 'gerente@saltdigi.com.br',
+            name: 'Gerente SALT',
+            password: managerPassword,
+            role: 'manager',
+            tenantId: tenant.id,
+            isActive: true,
+        },
+    });
+
+    console.log(`✅ Manager user created: ${manager.email}`);
+
+    // Create agent user
+    const agentPassword = await bcrypt.hash('123456', 12);
+
+    const agent = await prisma.user.upsert({
+        where: {
+            tenantId_email: {
+                tenantId: tenant.id,
+                email: 'vendas@saltdigi.com.br',
+            },
+        },
+        update: {},
+        create: {
+            email: 'vendas@saltdigi.com.br',
+            name: 'Vendedor SALT',
+            password: agentPassword,
+            role: 'agent',
+            tenantId: tenant.id,
+            isActive: true,
+        },
+    });
+
+    console.log(`✅ Agent user created: ${agent.email}`);
+
+    // Create default funnel
+    const funnel = await prisma.funnel.upsert({
+        where: {
+            tenantId_name: {
+                tenantId: tenant.id,
+                name: 'Funil Principal',
+            },
+        },
+        update: {},
+        create: {
+            name: 'Funil Principal',
+            tenantId: tenant.id,
+            isDefault: true,
+            isActive: true,
+            type: 'sales',
+        },
+    });
+
+    console.log(`✅ Funnel created: ${funnel.name}`);
+
+    // Create stages
+    const stages = [
+        { name: 'Novos Leads', color: '#3B82F6', orderIndex: 0, isEntry: true },
+        { name: 'Qualificação', color: '#8B5CF6', orderIndex: 1, isEntry: false },
+        { name: 'Proposta', color: '#F59E0B', orderIndex: 2, isEntry: false },
+        { name: 'Negociação', color: '#EF4444', orderIndex: 3, isEntry: false },
+        { name: 'Fechamento', color: '#10B981', orderIndex: 4, isEntry: false, isExit: true, exitType: 'won' as const },
+    ];
+
+    for (const stage of stages) {
+        await prisma.funnelStage.upsert({
+            where: {
+                funnelId_orderIndex: {
+                    funnelId: funnel.id,
+                    orderIndex: stage.orderIndex,
+                },
+            },
+            update: {},
+            create: {
+                name: stage.name,
+                color: stage.color,
+                orderIndex: stage.orderIndex,
+                isEntry: stage.isEntry,
+                isExit: stage.isExit || false,
+                exitType: stage.exitType || null,
+                funnelId: funnel.id,
+                tenantId: tenant.id,
+            },
+        });
+    }
+
+    console.log(`✅ ${stages.length} stages created`);
+    console.log('\n🎉 Seed completed!');
+    console.log('\n📋 Login credentials:');
+    console.log('  Admin:    eryk@saltdigi.com.br / admin123');
+    console.log('  Gerente:  gerente@saltdigi.com.br / 123456');
+    console.log('  Vendedor: vendas@saltdigi.com.br / 123456');
+}
+
+main()
+    .catch((e) => {
+        console.error('❌ Seed failed:', e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
