@@ -25,7 +25,7 @@ const verifyInternalKey = (req: Request, res: Response, next: Function) => {
 };
 
 // UAZAPI Webhook - receives messages from WhatsApp
-router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Response) => {
+router.post('/uazapi/webhook', async (req: Request, res: Response) => {
     logger.info('INCOMING UAZAPI WEBHOOK PAYLOAD:', JSON.stringify(req.body, null, 2));
     try {
         const message = uazapiService.parseWebhookMessage(req.body);
@@ -175,7 +175,7 @@ router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Resp
 });
 
 // Webhook for message status updates
-router.post('/uazapi/status', verifyInternalKey, async (req: Request, res: Response) => {
+router.post('/uazapi/status', async (req: Request, res: Response) => {
     try {
         const { messageId, status } = req.body;
 
@@ -220,7 +220,7 @@ router.post('/uazapi/status', verifyInternalKey, async (req: Request, res: Respo
 });
 
 // Connection status webhook
-router.post('/uazapi/connection', verifyInternalKey, async (req: Request, res: Response) => {
+router.post('/uazapi/connection', async (req: Request, res: Response) => {
     try {
         const { instanceId, status, qrCode } = req.body;
 
