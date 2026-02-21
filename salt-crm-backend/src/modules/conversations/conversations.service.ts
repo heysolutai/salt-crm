@@ -14,9 +14,8 @@ export class ConversationsService {
     // Common select for conversation list
     private readonly conversationSelect = {
         id: true,
-        whatsappPhone: true,
+        contactPhone: true,
         status: true,
-        aiEnabled: true,
         unreadCount: true,
         lastMessageAt: true,
         createdAt: true,
@@ -70,7 +69,7 @@ export class ConversationsService {
                 {
                     OR: [
                         { lead: { name: { contains: query.search, mode: 'insensitive' } } },
-                        { whatsappPhone: { contains: query.search } },
+                        { contactPhone: { contains: query.search } },
                     ],
                 },
             ];
@@ -139,7 +138,6 @@ export class ConversationsService {
 
         if (data.status !== undefined) updateData.status = data.status;
         if (data.assignedToId !== undefined) updateData.assignedToId = data.assignedToId;
-        if (data.aiEnabled !== undefined) updateData.aiEnabled = data.aiEnabled;
         if (data.isPinned !== undefined) {
             updateData.isPinned = data.isPinned;
             updateData.pinnedById = data.isPinned ? authUser.id : null;
@@ -170,7 +168,7 @@ export class ConversationsService {
         });
 
         // Create history entry for lead
-        const lead = await prisma.lead.findUnique({ where: { id: conversation.lead.id } });
+        const lead = conversation.lead ? await prisma.lead.findUnique({ where: { id: conversation.lead.id } }) : null;
         if (lead) {
             const toUser = await prisma.user.findUnique({
                 where: { id: data.toUserId },
@@ -223,7 +221,7 @@ export class ConversationsService {
                 mediaUrl: true,
                 status: true,
                 createdAt: true,
-                sentBy: {
+                sender: {
                     select: { id: true, name: true, avatarUrl: true },
                 },
             },
@@ -242,7 +240,7 @@ export class ConversationsService {
                 conversationId,
                 direction: 'outbound',
                 senderType: 'agent',
-                sentById: authUser.id,
+                senderId: authUser.id,
                 content: data.content,
                 contentType: data.contentType,
                 mediaUrl: data.mediaUrl,
@@ -257,7 +255,7 @@ export class ConversationsService {
                 mediaUrl: true,
                 status: true,
                 createdAt: true,
-                sentBy: {
+                sender: {
                     select: { id: true, name: true, avatarUrl: true },
                 },
             },
@@ -273,20 +271,22 @@ export class ConversationsService {
         });
 
         // Update lead interaction
-        await prisma.lead.update({
-            where: { id: conversation.lead.id },
-            data: {
-                lastInteractionAt: new Date(),
-                interactionCount: { increment: 1 },
-            },
-        });
+        if (conversation.lead) {
+            await prisma.lead.update({
+                where: { id: conversation.lead.id },
+                data: {
+                    lastInteractionAt: new Date(),
+                    interactionCount: { increment: 1 },
+                },
+            });
+        }
 
         // Integrate with UAZAPI
         if (conversation.whatsappConnection?.instanceId) {
             const { whatsappService } = await import('../whatsapp/whatsapp.service.js');
             await whatsappService.sendMessage(
                 conversation.whatsappConnection.instanceId,
-                conversation.lead.phone, // Ensure phone is in correct format (55...)
+                conversation.contactPhone, // Ensure phone is in correct format (55...)
                 data.content
             );
         }

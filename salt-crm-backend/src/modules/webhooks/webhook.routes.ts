@@ -53,8 +53,8 @@ router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Resp
         let conversation = await prisma.conversation.findFirst({
             where: {
                 tenantId,
-                whatsappPhone: message.phone,
-                connectionId: connection.id,
+                contactPhone: message.phone,
+                whatsappConnectionId: connection.id,
             },
             include: { lead: true },
         });
@@ -94,10 +94,9 @@ router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Resp
                 data: {
                     tenantId,
                     leadId: lead.id,
-                    connectionId: connection.id,
-                    whatsappPhone: message.phone,
+                    whatsappConnectionId: connection.id,
+                    contactPhone: message.phone,
                     status: 'ai_handling',
-                    aiEnabled: true,
                 },
                 include: { lead: true },
             });
@@ -118,7 +117,7 @@ router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Resp
                 content: message.content,
                 contentType: message.contentType,
                 mediaUrl: message.mediaUrl,
-                whatsappMessageId: message.messageId,
+                externalId: message.messageId,
                 status: 'delivered',
             },
             select: {
@@ -143,15 +142,17 @@ router.post('/uazapi/webhook', verifyInternalKey, async (req: Request, res: Resp
         });
 
         // Update lead interaction
-        await prisma.lead.update({
-            where: { id: conversation.lead.id },
-            data: {
-                lastInteractionAt: new Date(),
-                interactionCount: { increment: 1 },
-                // First response time
-                firstResponseAt: conversation.lead.firstResponseAt || new Date(),
-            },
-        });
+        if (conversation.lead) {
+            await prisma.lead.update({
+                where: { id: conversation.lead.id },
+                data: {
+                    lastInteractionAt: new Date(),
+                    interactionCount: { increment: 1 },
+                    // First response time
+                    firstResponseAt: conversation.lead.firstResponseAt || new Date(),
+                },
+            });
+        }
 
         // Emit new message event
         if (socketService) {
@@ -189,14 +190,14 @@ router.post('/uazapi/status', verifyInternalKey, async (req: Request, res: Respo
 
         // Update message status
         const message = await prisma.message.updateMany({
-            where: { whatsappMessageId: messageId },
+            where: { externalId: messageId },
             data: { status: mappedStatus as any },
         });
 
         if (message.count > 0) {
             // Get conversation to emit event
             const dbMessage = await prisma.message.findFirst({
-                where: { whatsappMessageId: messageId },
+                where: { externalId: messageId },
                 select: { conversationId: true },
             });
 
