@@ -142,20 +142,49 @@ class WhatsappService {
      */
     async sendMessage(instanceToken: string, to: string, text: string) {
         try {
-            const response = await axios.post(`${this.baseUrl}/send/text`, {
-                number: to,
-                text: text
-            }, {
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'token': instanceToken
-                }
+            const { uazapiService } = await import('../../services/uazapi.service.js');
+            const response = await uazapiService.sendTextMessage({
+                instanceId: instanceToken, // The instance name is passed as token here usually
+                phone: to,
+                message: text
             });
-            return response.data;
+            return response;
         } catch (error: any) {
-            logger.error(`Error sending message:`, error.response?.data || error.message);
+            logger.error(`Error sending message via uazapi:`, error.message);
             return null;
+        }
+    }
+
+    /**
+     * Send a media message
+     */
+    async sendMediaMessage(instanceToken: string, to: string, text: string, mediaUrl: string, mediaType: 'image' | 'audio' | 'video' | 'document') {
+        try {
+            const { uazapiService } = await import('../../services/uazapi.service.js');
+            const response = await uazapiService.sendMediaMessage({
+                instanceId: instanceToken,
+                phone: to,
+                message: text,
+                mediaUrl,
+                mediaType
+            });
+            return response;
+        } catch (error: any) {
+            logger.error(`Error sending media message via uazapi:`, error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Send presence (typing/recording)
+     */
+    async sendPresence(instanceToken: string, to: string, isTyping: boolean) {
+        try {
+            const { uazapiService } = await import('../../services/uazapi.service.js');
+            return await uazapiService.sendPresence(instanceToken, to, isTyping);
+        } catch (error: any) {
+            logger.error(`Error sending presence via uazapi:`, error.message);
+            return false;
         }
     }
 

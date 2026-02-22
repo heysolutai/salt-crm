@@ -6,7 +6,7 @@ interface UAZAPIConfig {
     apiKey: string;
 }
 
-interface SendMessageParams {
+export interface SendMessageParams {
     instanceId: string;
     phone: string;
     message: string;
@@ -14,7 +14,7 @@ interface SendMessageParams {
     mediaType?: 'image' | 'audio' | 'video' | 'document';
 }
 
-interface SendMessageResponse {
+export interface SendMessageResponse {
     success: boolean;
     messageId?: string;
     error?: string;
@@ -68,7 +68,7 @@ export class UAZAPIService {
     // Send text message
     async sendTextMessage(params: SendMessageParams): Promise<SendMessageResponse> {
         try {
-            const result = await this.request<{ id: string }>('/message/text', {
+            const result = await this.request<{ id: string }>('/send/text', {
                 method: 'POST',
                 body: JSON.stringify({
                     instance: params.instanceId,
@@ -99,8 +99,7 @@ export class UAZAPIService {
         }
 
         try {
-            const endpoint = `/message/${params.mediaType}`;
-            const result = await this.request<{ id: string }>(endpoint, {
+            const result = await this.request<{ id: string }>('/send/media', {
                 method: 'POST',
                 body: JSON.stringify({
                     instance: params.instanceId,
@@ -122,6 +121,24 @@ export class UAZAPIService {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error',
             };
+        }
+    }
+
+    // Send Presence Update
+    async sendPresence(instanceId: string, phone: string, isTyping: boolean): Promise<boolean> {
+        try {
+            await this.request('/message/presence', {
+                method: 'POST',
+                body: JSON.stringify({
+                    instance: instanceId,
+                    number: phone,
+                    presence: isTyping ? 'composing' : 'paused' // Typical whatsapp presence values; Uazapi will handle it
+                }),
+            });
+            return true;
+        } catch (error) {
+            logger.error('Failed to send presence:', error);
+            return false;
         }
     }
 
@@ -181,12 +198,14 @@ export class UAZAPIService {
                 return null;
             }
 
-            // In Evolution API, message.key holds the ID, fromMe, remoteJid
+            // In Evolution API, message.key holds the ID, fromMe, remoteJid.
+            // In UAZAPI v2, message.fromMe exists directly.
             const fromMe = message.fromMe === true || message.key?.fromMe === true;
 
             // Extract phone from chatid/remoteJid
             const getPhone = (id?: string) => id ? id.split('@')[0] : '';
-            const rawPhoneId = message.key?.remoteJid || message.sender_pn || message.chatid || chat?.wa_chatid || chat?.phone;
+            // It MUST prioritize chatid over sender_pn, because sender_pn is the user's OWN number if fromMe is true
+            const rawPhoneId = message.key?.remoteJid || message.chatid || chat?.wa_chatid || chat?.phone || message.sender_pn;
             const phone = getPhone(rawPhoneId);
 
             if (!phone || phone === 'status') {

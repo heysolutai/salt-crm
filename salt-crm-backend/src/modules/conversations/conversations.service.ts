@@ -284,11 +284,33 @@ export class ConversationsService {
         // Integrate with UAZAPI
         if (conversation.whatsappConnection?.instanceId) {
             const { whatsappService } = await import('../whatsapp/whatsapp.service.js');
-            await whatsappService.sendMessage(
-                conversation.whatsappConnection.instanceId,
-                conversation.contactPhone, // Ensure phone is in correct format (55...)
-                data.content
-            );
+            const instanceId = conversation.whatsappConnection.instanceId;
+            const phone = conversation.contactPhone;
+
+            // Optional: simulate typing before sending
+            await whatsappService.sendPresence(instanceId, phone, true);
+
+            // Brief pause to make typing look natural
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            if (data.mediaUrl && data.contentType !== 'text') {
+                await whatsappService.sendMediaMessage(
+                    instanceId,
+                    phone,
+                    data.content || '',
+                    data.mediaUrl,
+                    data.contentType as 'image' | 'audio' | 'video' | 'document'
+                );
+            } else {
+                await whatsappService.sendMessage(
+                    instanceId,
+                    phone,
+                    data.content
+                );
+            }
+
+            // Stop typing
+            await whatsappService.sendPresence(instanceId, phone, false);
         }
 
         return message;
