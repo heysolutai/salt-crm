@@ -69,21 +69,45 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
             return;
         }
 
-        // Handle connection updates
-        if (req.body.EventType === 'connection_update' || req.body.event === 'connection.update') {
-            const instanceName = req.body.instanceName || req.body.instance;
-            const state = req.body.data?.state || req.body.state;
+        // Handle connection updates - UAZAPI sends various formats
+        // Check multiple possible field combinations
+        const isConnectionEvent =
+            req.body.EventType === 'connection_update' ||
+            req.body.EventType === 'connection.update' ||
+            req.body.event === 'connection.update' ||
+            req.body.event === 'connection_update' ||
+            req.body.data?.event === 'connection.update' ||
+            (req.body.event === 'status.instance' && req.body.data);
 
-            if (instanceName && state) {
+        if (isConnectionEvent) {
+            // Try to extract instance name from multiple possible locations
+            const instanceName = req.body.instanceName || req.body.instance ||
+                req.body.data?.instance || req.body.sender?.split('@')?.[0];
+            const state = req.body.data?.state || req.body.state ||
+                req.body.data?.status || req.body.status;
+
+            // Also try to find by token from headers
+            const tokenFromHeader = req.headers['token'] as string || req.headers['apikey'] as string;
+
+            logger.info(`Connection event: instance=${instanceName}, state=${state}, headerToken=${tokenFromHeader?.substring(0, 10)}`);
+
+            if (state) {
                 let newStatus: 'connected' | 'disconnected' | 'pending' | 'banned' = 'pending';
                 if (state === 'open' || state === 'connected') newStatus = 'connected';
-                else if (state === 'close' || state === 'disconnected' || state === 'refused') newStatus = 'disconnected';
+                else if (state === 'close' || state === 'closed' || state === 'disconnected' || state === 'refused') newStatus = 'disconnected';
 
-                await prisma.whatsappConnection.updateMany({
-                    where: { instanceId: instanceName },
-                    data: { status: newStatus as any }
-                });
-                logger.info(`Updated connection status for ${instanceName} to ${newStatus}`);
+                // Try update by instanceName first
+                if (instanceName) {
+                    const updated = await prisma.whatsappConnection.updateMany({
+                        where: { instanceId: instanceName },
+                        data: { status: newStatus as any }
+                    });
+                    if (updated.count > 0) {
+                        logger.info(`Updated connection status for ${instanceName} to ${newStatus}`);
+                    } else {
+                        logger.warn(`No DB connection found for instanceId: ${instanceName}`);
+                    }
+                }
             }
             res.status(200).json({ success: true, message: 'Connection updated' });
             return;
