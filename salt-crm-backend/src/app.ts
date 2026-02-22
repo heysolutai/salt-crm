@@ -47,6 +47,20 @@ app.get('/health', (req, res) => {
     });
 });
 
+// ============ UAZAPI WEBHOOK - CATCH ALL POSSIBLE PATHS ============
+// UAZAPI may hit /webhook, /api/v1/whatsapp/webhook, etc.
+// We handle GET (health check) and POST (actual events) at root level
+import { handleUazapiWebhook } from './modules/whatsapp/whatsapp.webhook.js';
+
+const webhookPaths = ['/webhook', '/api/v1/whatsapp/webhook', '/webhooks/uazapi/webhook'];
+
+webhookPaths.forEach(path => {
+    app.get(path, (_req, res) => {
+        res.status(200).json({ status: 'ok', message: 'Webhook endpoint active' });
+    });
+    app.post(path, handleUazapiWebhook);
+});
+
 // API Routes
 const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
