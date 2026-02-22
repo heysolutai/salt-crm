@@ -159,12 +159,36 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
             });
 
             if (!lead) {
+                // Find first funnel + stage for this tenant to use as default
+                const defaultFunnel = await prisma.funnel.findFirst({
+                    where: { tenantId },
+                });
+
+                if (!defaultFunnel) {
+                    logger.error(`No funnel found for tenant ${tenantId}, cannot create lead`);
+                    res.status(200).json({ success: true, message: 'No funnel configured' });
+                    return;
+                }
+
+                const defaultStage = await prisma.funnelStage.findFirst({
+                    where: { funnelId: defaultFunnel.id },
+                    orderBy: { orderIndex: 'asc' },
+                });
+
+                if (!defaultStage) {
+                    logger.error(`No stage found for funnel ${defaultFunnel.id}, cannot create lead`);
+                    res.status(200).json({ success: true, message: 'No stage configured' });
+                    return;
+                }
+
                 lead = await prisma.lead.create({
                     data: {
                         tenantId,
+                        funnelId: defaultFunnel.id,
+                        stageId: defaultStage.id,
                         name: message.senderName || message.phone,
                         phone: message.phone,
-                    } as any,
+                    },
                 });
             }
 
