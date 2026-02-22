@@ -123,28 +123,20 @@ class WhatsappService {
      * @param instanceToken The instance token 
      * @param instanceName The instance name
      */
-    async deleteProviderInstance(instanceToken: string, instanceName: string) {
+    async deleteProviderInstance(instanceToken: string, _instanceName: string) {
         try {
-            // First attempt: DELETE /instance/:instanceName
-            await this.getClient(instanceToken).delete(`/instance/${instanceName}`, {
+            // UAZAPI: DELETE /instance with token header
+            await axios.delete(`${this.baseUrl}/instance`, {
                 headers: {
-                    'apikey': this.apiKey // Some evolution APIS require apikey for deletion
+                    'Accept': 'application/json',
+                    'token': instanceToken
                 }
             });
-            logger.info(`Successfully deleted instance ${instanceName} via Evolution route.`);
+            logger.info(`Successfully deleted instance ${_instanceName} from UAZAPI.`);
             return true;
         } catch (error: any) {
-            // Fallback: DELETE /instance/logout/:instanceName
-            try {
-                await this.getClient(instanceToken).delete(`/instance/logout/${instanceName}`, {
-                    headers: { 'apikey': this.apiKey }
-                });
-                logger.info(`Successfully deleted instance ${instanceName} via fallback logout route.`);
-                return true;
-            } catch (fallbackError: any) {
-                logger.error(`Error deleting instance ${instanceName} across all routes:`, fallbackError.response?.data || fallbackError.message);
-                return false;
-            }
+            logger.error(`Error deleting instance ${_instanceName}:`, error.response?.data || error.message);
+            return false;
         }
     }
 }

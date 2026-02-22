@@ -2,42 +2,35 @@ require('dotenv').config();
 const axios = require('axios');
 
 async function testDelete() {
-    const baseUrl = process.env.UAZAPI_BASE_URL || 'https://api.uazapi.com';
+    const baseUrl = process.env.UAZAPI_BASE_URL;
     const apiKey = process.env.UAZAPI_API_KEY;
-    const instanceName = process.argv[2];
+    const instanceName = process.argv[2] || 'salt-saltdemo-teste';
 
-    if (!instanceName) {
-        console.error("Please provide an instance name to delete. Example: node test-uazapi-delete.js instance_name");
-        return;
-    }
+    console.log(`Testing delete for: ${instanceName}`);
+    console.log(`Base URL: ${baseUrl}\n`);
 
-    console.log(`Attempting to delete instance: ${instanceName}`);
-    console.log(`Base URL: ${baseUrl}`);
-
-    const headers = {
-        'apikey': apiKey,
-        'admintoken': apiKey
-    };
+    const headers = { 'admintoken': apiKey, 'apikey': apiKey };
 
     const endpoints = [
-        { method: 'DELETE', url: `${baseUrl}/instance/delete/${instanceName}` },
-        { method: 'DELETE', url: `${baseUrl}/instance/logout/${instanceName}` },
-        { method: 'DELETE', url: `${baseUrl}/instance/${instanceName}` },
-        { method: 'POST', url: `${baseUrl}/instance/logout/${instanceName}` },
+        { method: 'POST', url: `${baseUrl}/instance/delete` },
+        { method: 'POST', url: `${baseUrl}/instance/logout` },
         { method: 'POST', url: `${baseUrl}/instance/delete/${instanceName}` },
+        { method: 'POST', url: `${baseUrl}/instance/logout/${instanceName}` },
+        { method: 'DELETE', url: `${baseUrl}/instance/${instanceName}` },
+        { method: 'DELETE', url: `${baseUrl}/instance/delete/${instanceName}` },
     ];
 
     for (const ep of endpoints) {
         try {
-            console.log(`\nTrying: ${ep.method} ${ep.url}`);
-            const res = await axios({ method: ep.method, url: ep.url, headers });
-            console.log("SUCCESS!");
-            console.log(res.data);
+            console.log(`${ep.method} ${ep.url}`);
+            const res = await axios({ method: ep.method, url: ep.url, headers, data: { name: instanceName } });
+            console.log("  => SUCCESS!", JSON.stringify(res.data).substring(0, 200));
             return;
         } catch (err) {
-            console.log("FAILED:", err.response?.status, err.response?.data || err.message);
+            console.log(`  => FAIL ${err.response?.status}: ${JSON.stringify(err.response?.data || err.message).substring(0, 150)}`);
         }
     }
+    console.log('\nNenhum endpoint funcionou.');
 }
 
 testDelete();
