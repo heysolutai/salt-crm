@@ -220,6 +220,42 @@ const Outros: React.FC = () => {
     }
   }, [activeSection]);
 
+  // Polling para checar status da conexão enquanto o modal de QR Code está aberto
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+
+    if (showQrCodeForConnection) {
+      interval = setInterval(async () => {
+        try {
+          const response = await whatsappApi.getAll();
+          const mapped = response.data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            phone: c.phoneNumber,
+            status: c.status === 'connected' ? 'connected' : 'disconnected',
+            connectedAt: c.createdAt
+          }));
+          setWhatsappConnections(mapped);
+
+          const current = mapped.find((c: any) => c.id === showQrCodeForConnection);
+          if (current && current.status === 'connected') {
+            setShowQrCodeForConnection(null);
+            toast({
+              title: 'WhatsApp conectado!',
+              description: 'A caixa de entrada foi vinculada com sucesso.',
+            });
+          }
+        } catch (error) {
+          console.error('Error polling connection status:', error);
+        }
+      }, 3000); // Check every 3 seconds
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showQrCodeForConnection, toast]);
+
   // Limite de WhatsApps permitidos (vem do plano/contrato do tenant)
   const [whatsappSlotLimit, setWhatsappSlotLimit] = useState(1);
   const [pendingSlotRequest, setPendingSlotRequest] = useState(false);
