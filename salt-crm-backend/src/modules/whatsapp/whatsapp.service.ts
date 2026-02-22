@@ -75,10 +75,12 @@ class WhatsappService {
                 url: webhookUrl,
                 events: [
                     "messages",
-                    "connection",
-                    "send_message"
+                    "messages_update",
+                    "connection"
                 ],
-                excludeMessages: [],
+                excludeMessages: [
+                    "isGroupYes"
+                ],
                 addUrlEvents: false,
                 addUrlTypesMessages: false
             }, {
