@@ -37,20 +37,16 @@ class WhatsappService {
                 name: instanceName,
                 systemName: 'salt-crm',
                 fingerprintProfile: 'chrome',
-                browser: 'chrome',
-                webhook: process.env.WEBHOOK_URL || '',
-                webhook_events: [
-                    "MESSAGES_UPSERT",
-                    "MESSAGES_UPDATE",
-                    "MESSAGES_DELETE",
-                    "SEND_MESSAGE",
-                    "CONNECTION_UPDATE",
-                    "CALL"
-                ]
+                browser: 'chrome'
             });
 
+            // Extract token from either the new format or fallback format
+            const instanceToken = response.data.instance?.token || response.data.hash?.token || '';
+
             // Try explicit webhook registration as fallback
-            await this.registerWebhook(instanceName);
+            if (instanceToken) {
+                await this.registerWebhook(instanceToken);
+            }
 
             return response.data;
         } catch (error: any) {
@@ -59,25 +55,25 @@ class WhatsappService {
         }
     }
 
-    private async registerWebhook(instanceName: string) {
+    private async registerWebhook(instanceToken: string) {
         try {
             const webhookUrl = process.env.WEBHOOK_URL || 'https://api.saltdigi.heysolu.com.br/webhooks/uazapi/webhook';
 
-            await this.getClient().post(`/webhook/set/${instanceName}`, {
+            await this.getClient(instanceToken).post(`/webhook`, {
+                enabled: true,
                 url: webhookUrl,
-                webhook_by_events: false,
-                webhook_base64: false,
                 events: [
-                    "MESSAGES_UPSERT",
-                    "MESSAGES_UPDATE",
-                    "SEND_MESSAGE",
-                    "CONNECTION_UPDATE",
-                    "CALL"
-                ]
+                    "messages",
+                    "connection_update",
+                    "send_message"
+                ],
+                excludeMessages: [],
+                addUrlEvents: false,
+                addUrlTypesMessages: false
             });
-            logger.info(`Webhook successfully registered for instance ${instanceName}`);
+            logger.info(`Webhook successfully registered for instance with token ${instanceToken.substring(0, 10)}...`);
         } catch (error: any) {
-            logger.error(`Error explicitly registering webhook for ${instanceName}:`, error.response?.data || error.message);
+            logger.error(`Error explicitly registering webhook:`, error.response?.data || error.message);
         }
     }
 
@@ -123,16 +119,26 @@ class WhatsappService {
     }
 
     /**
-     * Logout/Disconnect instance
+     * Completely delete and wipe instance from provider
      * @param instanceToken The instance token 
+     * @param instanceName The instance name
      */
-    async logout(instanceToken: string) {
+    async deleteProviderInstance(instanceToken: string, instanceName: string) {
         try {
-            await this.getClient(instanceToken).delete(`/instance/logout`);
+            // Try Evolution API delete logic first
+            await this.getClient(instanceToken).delete(`/instance/delete/${instanceName}`);
+            logger.info(`Successfully deleted instance ${instanceName} via Evolution route.`);
             return true;
         } catch (error: any) {
-            logger.error(`Error logging out:`, error.response?.data || error.message);
-            return false;
+            // Fallback to UAZAPI base delete
+            try {
+                await this.getClient(instanceToken).delete(`/instance`);
+                logger.info(`Successfully deleted instance ${instanceName} via UAZAPI route.`);
+                return true;
+            } catch (fallbackError: any) {
+                logger.error(`Error deleting instance ${instanceName} across all routes:`, fallbackError.response?.data || fallbackError.message);
+                return false;
+            }
         }
     }
 }
