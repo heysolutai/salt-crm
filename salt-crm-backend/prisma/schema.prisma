@@ -628,6 +628,7 @@ model Lead {
   email                 String?
   document              String?
   documentType          DocumentType?   @map("document_type")
+  avatarUrl             String?         @map("avatar_url")
   
   // Endereço
   city                  String?

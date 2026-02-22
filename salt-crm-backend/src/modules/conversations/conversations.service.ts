@@ -24,11 +24,12 @@ export class ConversationsService {
                 id: true,
                 name: true,
                 phone: true,
+                avatarUrl: true,
                 temperature: true,
             },
         },
         assignedTo: {
-            select: { id: true, name: true },
+            select: { id: true, name: true, avatarUrl: true },
         },
         whatsappConnection: {
             select: { id: true, phoneNumber: true, name: true },
