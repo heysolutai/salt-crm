@@ -1,0 +1,39 @@
+﻿[dotenv@17.2.4] injecting env (13) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+INIT Token: 4ae40982-385b-43d5-89f0-fdd2d9be9b48
+
+Testing: GET /instance/qr
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /instance/qrcode
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /instance/status
+SUCCESS: 200 [ 'instance', 'status' ]
+
+Testing: GET /instance/info
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /instance/connect
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /instance/qr?token=4ae40982-385b-43d5-89f0-fdd2d9be9b48
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /qrcode?token=4ae40982-385b-43d5-89f0-fdd2d9be9b48
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: GET /session/qr/4ae40982-385b-43d5-89f0-fdd2d9be9b48
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }
+
+Testing: POST /instance/qr
+ERR: 405 { code: 405, message: 'Method Not Allowed.', data: {} }
+
+Testing: GET /docs
+SUCCESS: 200 <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+
+Testing: GET /api-docs
+ERR: 404 { code: 404, message: 'Not Found.', data: {} }

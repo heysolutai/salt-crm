@@ -24,10 +24,9 @@ export class WhatsappController {
             const sanitizedTenantName = tenant.name.toLowerCase().replace(/[^a-z0-9]/g, '');
             const sanitizedInstanceName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-            // Construct final instance name with a random suffix to avoid provider collisions
-            // This is crucial in case a DB record is deleted but the provider instance is not.
-            const uniqueSuffix = Math.floor(Date.now() / 1000).toString(36);
-            const finalInstanceName = `salt_${sanitizedTenantName}_${sanitizedInstanceName}_${uniqueSuffix}`;
+            // Construct final instance name without the random suffix as requested by user
+            // Format: salt-{empresa}-{nome}
+            const finalInstanceName = `salt-${sanitizedTenantName}-${sanitizedInstanceName}`;
 
             // Call service
             const result = await whatsappService.createInstance(finalInstanceName);

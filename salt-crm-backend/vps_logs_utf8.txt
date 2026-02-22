@@ -1,0 +1,300 @@
+﻿      "ACEFF985DDE194FB2B357AA8F5DDD32C",
+      "AC3324AD894A861F5737C65F37075115"
+    ],
+    "Sender": "86475626557487:28@lid",
+    "Timestamp": 1771712422,
+    "Type": "Read",
+    "chatid": "556295396100@s.whatsapp.net",
+    "chatlid": "260245087592659@lid",
+    "sender_lid": "8647562655748728@lid",
+    "sender_pn": null
+  },
+  "instanceName": "salt_saltdemo_yagoteste",
+  "owner": "556299197953",
+  "state": "Read",
+  "token": "4e71ebe3-f87b-4a88-ae86-f99da667fa71",
+  "type": "ReadReceipt"
+}
+===================================================================
+2026-02-21 22:20:24 [[32minfo[39m]: POST /uazapi/webhook 200 - 3ms
+2026-02-21 22:22:25 [[33mwarn[39m]: UNAUTHORIZED: Token inv├ílido ou expirado
+2026-02-21 22:22:25 [[32minfo[39m]: GET /api/v1/whatsapp 401 - 3ms
+2026-02-21 22:22:25 [[33mwarn[39m]: VALIDATION_ERROR: Erro de valida├º├úo
+2026-02-21 22:22:25 [[32minfo[39m]: POST /api/v1/auth/refresh 422 - 2ms
+2026-02-21 22:22:31 [[32minfo[39m]: POST /login 200 - 357ms
+2026-02-21 22:22:43 [[32minfo[39m]: GET / 304 - 5ms
+2026-02-21 22:22:46 [[32minfo[39m]: GET / 404 - 0ms
+2026-02-21 22:25:00 [[32minfo[39m]: GET / 304 - 23ms
+2026-02-21 22:32:10 [[32minfo[39m]: GET / 404 - 1ms
+2026-02-21 22:32:19 [[32minfo[39m]: GET / 404 - 1ms
+2026-02-21 22:32:25 [[32minfo[39m]: GET /wiki 404 - 0ms
+================= INCOMING UAZAPI WEBHOOK PAYLOAD =================
+{
+  "BaseUrl": "https://saltdigi.uazapi.com",
+  "EventType": "messages",
+  "chat": {
+    "chatbot_agentResetMemoryAt": 0,
+    "chatbot_disableUntil": 0,
+    "chatbot_lastTriggerAt": 0,
+    "chatbot_lastTrigger_id": "",
+    "id": "rba6b2fcd9313f4",
+    "image": "",
+    "imagePreview": "",
+    "lead_assignedAttendant_id": "",
+    "lead_email": "",
+    "lead_field01": "",
+    "lead_field02": "",
+    "lead_field03": "",
+    "lead_field04": "",
+    "lead_field05": "",
+    "lead_field06": "",
+    "lead_field07": "",
+    "lead_field08": "",
+    "lead_field09": "",
+    "lead_field10": "",
+    "lead_field11": "",
+    "lead_field12": "",
+    "lead_field13": "",
+    "lead_field14": "",
+    "lead_field15": "",
+    "lead_field16": "",
+    "lead_field17": "",
+    "lead_field18": "",
+    "lead_field19": "",
+    "lead_field20": "",
+    "lead_fullName": "",
+    "lead_isTicketOpen": false,
+    "lead_kanbanOrder": 0,
+    "lead_name": "",
+    "lead_notes": "",
+    "lead_personalid": "",
+    "lead_status": "",
+    "lead_tags": [],
+    "name": "",
+    "owner": "556299197953",
+    "phone": "5522999120572",
+    "wa_archived": false,
+    "wa_chatid": "5522999120572@s.whatsapp.net",
+    "wa_chatlid": "161194937679957@lid",
+    "wa_contactName": "",
+    "wa_ephemeralExpiration": 0,
+    "wa_fastid": "556299197953:5522999120572",
+    "wa_isBlocked": false,
+    "wa_isGroup": false,
+    "wa_isGroup_admin": false,
+    "wa_isGroup_announce": false,
+    "wa_isGroup_community": false,
+    "wa_isGroup_member": false,
+    "wa_isPinned": false,
+    "wa_label": [],
+    "wa_lastMessageSender": "161194937679957@lid",
+    "wa_lastMessageTextVote": "Irm├úo",
+    "wa_lastMessageType": "Conversation",
+    "wa_lastMsgTimestamp": 1771713336000,
+    "wa_muteEndTime": 0,
+    "wa_name": "Thales Faria",
+    "wa_unreadCount": 1
+  },
+  "chatSource": "updated",
+  "instanceName": "salt_saltdemo_yagoteste",
+  "message": {
+    "buttonOrListid": "",
+    "chatid": "5522999120572@s.whatsapp.net",
+    "chatlid": "161194937679957@lid",
+    "content": "Irm├úo",
+    "convertOptions": "",
+    "edited": "",
+    "fromMe": false,
+    "groupName": "Unknown",
+    "id": "556299197953:3AC17777CAE3666DF5F0",
+    "isGroup": false,
+    "mediaType": "",
+    "messageTimestamp": 1771713336000,
+    "messageType": "Conversation",
+    "messageid": "3AC17777CAE3666DF5F0",
+    "owner": "556299197953",
+    "quoted": "",
+    "reaction": "",
+    "sender": "161194937679957@lid",
+    "senderName": "Thales Faria",
+    "sender_lid": "161194937679957@lid",
+    "sender_pn": "5522999120572@s.whatsapp.net",
+    "source": "ios",
+    "status": "",
+    "text": "Irm├úo",
+    "track_id": "",
+    "track_source": "",
+    "type": "text",
+    "vote": "",
+    "wasSentByApi": false
+  },
+  "owner": "556299197953",
+  "token": "4e71ebe3-f87b-4a88-ae86-f99da667fa71"
+}
+===================================================================
+2026-02-21 22:35:36 [[33mwarn[39m]: Unknown WhatsApp instance: salt_saltdemo_yagoteste
+2026-02-21 22:35:36 [[32minfo[39m]: POST /uazapi/webhook 200 - 14ms
+================= INCOMING UAZAPI WEBHOOK PAYLOAD =================
+{
+  "BaseUrl": "https://saltdigi.uazapi.com",
+  "EventType": "messages",
+  "chat": {
+    "chatbot_agentResetMemoryAt": 0,
+    "chatbot_disableUntil": 0,
+    "chatbot_lastTriggerAt": 0,
+    "chatbot_lastTrigger_id": "",
+    "id": "rba6b2fcd9313f4",
+    "image": "",
+    "imagePreview": "",
+    "lead_assignedAttendant_id": "",
+    "lead_email": "",
+    "lead_field01": "",
+    "lead_field02": "",
+    "lead_field03": "",
+    "lead_field04": "",
+    "lead_field05": "",
+    "lead_field06": "",
+    "lead_field07": "",
+    "lead_field08": "",
+    "lead_field09": "",
+    "lead_field10": "",
+    "lead_field11": "",
+    "lead_field12": "",
+    "lead_field13": "",
+    "lead_field14": "",
+    "lead_field15": "",
+    "lead_field16": "",
+    "lead_field17": "",
+    "lead_field18": "",
+    "lead_field19": "",
+    "lead_field20": "",
+    "lead_fullName": "",
+    "lead_isTicketOpen": false,
+    "lead_kanbanOrder": 0,
+    "lead_name": "",
+    "lead_notes": "",
+    "lead_personalid": "",
+    "lead_status": "",
+    "lead_tags": [],
+    "name": "",
+    "owner": "556299197953",
+    "phone": "5522999120572",
+    "wa_archived": false,
+    "wa_chatid": "5522999120572@s.whatsapp.net",
+    "wa_chatlid": "161194937679957@lid",
+    "wa_contactName": "",
+    "wa_ephemeralExpiration": 0,
+    "wa_fastid": "556299197953:5522999120572",
+    "wa_isBlocked": false,
+    "wa_isGroup": false,
+    "wa_isGroup_admin": false,
+    "wa_isGroup_announce": false,
+    "wa_isGroup_community": false,
+    "wa_isGroup_member": false,
+    "wa_isPinned": false,
+    "wa_label": [],
+    "wa_lastMessageSender": "161194937679957@lid",
+    "wa_lastMessageTextVote": "Conseguiu fazer os ajustes?",
+    "wa_lastMessageType": "Conversation",
+    "wa_lastMsgTimestamp": 1771713341000,
+    "wa_muteEndTime": 0,
+    "wa_name": "Thales Faria",
+    "wa_unreadCount": 1
+  },
+  "chatSource": "updated",
+  "instanceName": "salt_saltdemo_yagoteste",
+  "message": {
+    "buttonOrListid": "",
+    "chatid": "5522999120572@s.whatsapp.net",
+    "chatlid": "161194937679957@lid",
+    "content": "Conseguiu fazer os ajustes?",
+    "convertOptions": "",
+    "edited": "",
+    "fromMe": false,
+    "groupName": "Unknown",
+    "id": "556299197953:3A105EAE9EFDEF68CD87",
+    "isGroup": false,
+    "mediaType": "",
+    "messageTimestamp": 1771713341000,
+    "messageType": "Conversation",
+    "messageid": "3A105EAE9EFDEF68CD87",
+    "owner": "556299197953",
+    "quoted": "",
+    "reaction": "",
+    "sender": "161194937679957@lid",
+    "senderName": "Thales Faria",
+    "sender_lid": "161194937679957@lid",
+    "sender_pn": "5522999120572@s.whatsapp.net",
+    "source": "ios",
+    "status": "",
+    "text": "Conseguiu fazer os ajustes?",
+    "track_id": "",
+    "track_source": "",
+    "type": "text",
+    "vote": "",
+    "wasSentByApi": false
+  },
+  "owner": "556299197953",
+  "token": "4e71ebe3-f87b-4a88-ae86-f99da667fa71"
+}
+===================================================================
+2026-02-21 22:35:42 [[33mwarn[39m]: Unknown WhatsApp instance: salt_saltdemo_yagoteste
+2026-02-21 22:35:42 [[32minfo[39m]: POST /uazapi/webhook 200 - 3ms
+2026-02-21 22:35:51 [[32minfo[39m]: GET / 304 - 5ms
+2026-02-21 22:39:21 [[33mwarn[39m]: UNAUTHORIZED: Token inv├ílido ou expirado
+2026-02-21 22:39:21 [[32minfo[39m]: GET /api/v1/whatsapp 401 - 2ms
+2026-02-21 22:39:21 [[33mwarn[39m]: VALIDATION_ERROR: Erro de valida├º├úo
+2026-02-21 22:39:21 [[32minfo[39m]: POST /api/v1/auth/refresh 422 - 1ms
+2026-02-21 22:39:28 [[32minfo[39m]: POST /login 200 - 350ms
+2026-02-21 22:39:32 [[32minfo[39m]: GET / 304 - 6ms
+2026-02-21 22:39:34 [[32minfo[39m]: DELETE /4c1b2acd-36b7-4b82-acc5-dea62be29016 200 - 7ms
+================= INCOMING UAZAPI WEBHOOK PAYLOAD =================
+{
+  "BaseUrl": "https://saltdigi.uazapi.com",
+  "EventType": "connection",
+  "instance": {
+    "lastDisconnect": "2026-02-21 22:39:56.672Z",
+    "lastDisconnectReason": "disconnected by API",
+    "name": "salt_saltdemo_yagoteste",
+    "status": "disconnected"
+  },
+  "instanceName": "salt_saltdemo_yagoteste",
+  "owner": "556299197953",
+  "token": "4e71ebe3-f87b-4a88-ae86-f99da667fa71"
+}
+===================================================================
+2026-02-21 22:39:57 [[32minfo[39m]: POST /uazapi/webhook 200 - 1ms
+2026-02-21 22:40:36 [[32minfo[39m]: POST /instance 201 - 368ms
+2026-02-21 22:40:42 [[32minfo[39m]: GET /e7fe1b13-db84-4930-ab40-c46e2b07511d/connect 200 - 5121ms
+2026-02-21 22:42:17 [[32minfo[39m]: GET / 200 - 5ms
+2026-02-21 22:42:25 [[32minfo[39m]: GET / 304 - 4ms
+2026-02-21 22:55:00 [[32minfo[39m]: GET /.env 404 - 1ms
+2026-02-21 23:06:43 [[32minfo[39m]: POST / 404 - 1ms
+2026-02-21 23:08:23 [[32minfo[39m]: GET /robots.txt 404 - 0ms
+2026-02-21 23:08:24 [[32minfo[39m]: GET / 404 - 1ms
+2026-02-21 23:17:28 [[33mwarn[39m]: UNAUTHORIZED: Token inv├ílido ou expirado
+2026-02-21 23:17:28 [[32minfo[39m]: GET /api/v1/whatsapp 401 - 1ms
+2026-02-21 23:17:28 [[33mwarn[39m]: VALIDATION_ERROR: Erro de valida├º├úo
+2026-02-21 23:17:28 [[32minfo[39m]: POST /api/v1/auth/refresh 422 - 1ms
+2026-02-21 23:17:34 [[32minfo[39m]: POST /login 200 - 369ms
+2026-02-21 23:17:39 [[32minfo[39m]: GET / 304 - 8ms
+2026-02-21 23:24:00 [[32minfo[39m]: GET / 404 - 0ms
+2026-02-21 23:33:33 [[32minfo[39m]: GET / 404 - 1ms
+2026-02-21 23:42:05 [[32minfo[39m]: GET /Dr0v 404 - 0ms
+2026-02-21 23:42:08 [[32minfo[39m]: GET / 404 - 0ms
+2026-02-21 23:42:28 [[32minfo[39m]: GET /login 404 - 1ms
+2026-02-21 23:50:34 [[32minfo[39m]: GET /actuator/gateway/routes 404 - 1ms
+2026-02-21 23:57:42 [[32minfo[39m]: GET /owa/auth/x.js 404 - 1ms
+2026-02-21 23:59:54 [[32minfo[39m]: GET /get_portal_info 404 - 1ms
+2026-02-22 00:09:25 [[32minfo[39m]: POST /login 200 - 363ms
+2026-02-22 00:09:56 [[32minfo[39m]: GET / 200 - 6ms
+2026-02-22 00:09:58 [[32minfo[39m]: GET /e7fe1b13-db84-4930-ab40-c46e2b07511d/connect 200 - 313ms
+2026-02-22 00:09:58 [[32minfo[39m]: GET / 304 - 5ms
+2026-02-22 00:10:16 [[32minfo[39m]: GET / 304 - 4ms
+2026-02-22 00:10:20 [[31merror[39m]: Error logging out: Method Not Allowed.
+2026-02-22 00:10:20 [[32minfo[39m]: DELETE /e7fe1b13-db84-4930-ab40-c46e2b07511d 200 - 365ms
+2026-02-22 00:10:28 [[32minfo[39m]: POST /instance 201 - 307ms
+2026-02-22 00:10:32 [[32minfo[39m]: GET /5c061cd9-4a60-4475-ad8b-98563a380123/connect 200 - 4110ms
+2026-02-22 00:40:29 [[32minfo[39m]: GET /.env 404 - 0ms
+2026-02-22 00:45:35 [[32minfo[39m]: GET /robots.txt 404 - 0ms
+2026-02-22 00:45:35 [[32minfo[39m]: GET / 404 - 0ms

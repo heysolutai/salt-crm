@@ -19,7 +19,7 @@ async function setWebhook() {
             try {
                 // According to evolution-api docs (which UAZAPI is based on), we can set webhook like this
                 const webhookRes = await axios.post(`${baseUrl}/webhook/set/${instanceName}`, {
-                    url: "https://api.saltdigi.heysolu.com.br/api/v1/uazapi/webhook",
+                    url: "https://api.saltdigi.heysolut.com.br/api/v1/uazapi/webhook",
                     webhook_by_events: false,
                     webhook_base64: false,
                     events: [
@@ -40,7 +40,7 @@ async function setWebhook() {
                 // Try alternative route (sometimes it's /settings/webhook)
                 try {
                     const webhookRes2 = await axios.post(`${baseUrl}/settings/webhook/${instanceName}`, {
-                        url: "https://api.saltdigi.heysolu.com.br/api/v1/uazapi/webhook",
+                        url: "https://api.saltdigi.heysolut.com.br/api/v1/uazapi/webhook",
                         events: ["MESSAGES_UPSERT", "MESSAGES_UPDATE", "SEND_MESSAGE", "CONNECTION_UPDATE"]
                     }, {
                         headers: { 'admintoken': apiKey, 'Content-Type': 'application/json' }
