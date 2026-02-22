@@ -68,7 +68,7 @@ class WhatsappService {
      */
     private async registerWebhook(instanceToken: string) {
         try {
-            const webhookUrl = process.env.WEBHOOK_URL || 'https://api.saltdigi.heysolu.com.br/webhooks/uazapi/webhook';
+            const webhookUrl = process.env.WEBHOOK_URL || 'https://api.saltdigi.heysolut.com.br/api/v1/whatsapp/webhook';
 
             await axios.post(`${this.baseUrl}/webhook`, {
                 enabled: true,

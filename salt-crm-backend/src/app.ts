@@ -13,9 +13,16 @@ import { logger } from './utils/logger.js';
 
 const app = express();
 
-// Middlewares globais
+// CORS - allow frontend + webhook requests from any origin
 app.use(cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (webhooks, server-to-server)
+        if (!origin) return callback(null, true);
+        // Allow frontend
+        if (origin === env.FRONTEND_URL) return callback(null, true);
+        // Allow all for now (webhooks come from UAZAPI servers)
+        callback(null, true);
+    },
     credentials: true,
 }));
 app.use(express.json());
