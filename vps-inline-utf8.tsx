@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
-import { api } from '@/lib/api';
 import { mockOrigins } from '@/lib/mock-data';
 import { toast } from 'sonner';
 import {
@@ -94,11 +93,11 @@ interface InlineConversationsPanelProps {
 
 // Mock vendedores list
 const mockVendedores = [
-  { id: '1', name: 'Ademir José', email: 'ademir.jose@empresa.com' },
+  { id: '1', name: 'Ademir Jos├®', email: 'ademir.jose@empresa.com' },
   { id: '2', name: 'Administrativo TIME', email: 'admin@empresa.com' },
   { id: '3', name: 'Alexsandro', email: 'alexsandro.maciel@empresa.com' },
   { id: '4', name: 'Andrea', email: 'andrea@empresa.com' },
-  { id: '5', name: 'Antônio', email: 'antonio.pereira@empresa.com' },
+  { id: '5', name: 'Ant├┤nio', email: 'antonio.pereira@empresa.com' },
 ];
 
 const configOptions = [
@@ -123,7 +122,7 @@ const configOptions = [
   {
     id: 'notes',
     icon: StickyNote,
-    title: 'Observações',
+    title: 'Observa├º├Áes',
     description: 'Adicionar notas sobre o lead',
   },
 ];
@@ -146,7 +145,7 @@ const allStatusOptions = [
   },
   {
     id: 'em_negociacao',
-    label: 'Em Negociação',
+    label: 'Em Negocia├º├úo',
     color: '#F4C95D',
     hasSubStatus: true,
     subStatuses: [
@@ -155,15 +154,15 @@ const allStatusOptions = [
   },
   {
     id: 'fechado_ganho',
-    label: 'Fechado – Ganho',
+    label: 'Fechado ÔÇô Ganho',
     color: '#4CAF50',
     hasSubStatus: true,
     subStatuses: [
-      { id: 'fechado_ganho_mes', label: 'Ganho – Mês' },
-      { id: 'fechado_ganho_historico', label: 'Ganho – Histórico' },
+      { id: 'fechado_ganho_mes', label: 'Ganho ÔÇô M├¬s' },
+      { id: 'fechado_ganho_historico', label: 'Ganho ÔÇô Hist├│rico' },
     ]
   },
-  { id: 'fechado_perdido', label: 'Fechado – Perdido', color: '#9E9E9E' },
+  { id: 'fechado_perdido', label: 'Fechado ÔÇô Perdido', color: '#9E9E9E' },
   { id: 'arquivado', label: 'Arquivado', color: '#607D8B' },
   { id: 'fora_de_perfil', label: 'Fora de Perfil', color: '#795548' },
   { id: 'sem_retorno', label: 'Sem Retorno', color: '#78909C' },
@@ -278,7 +277,6 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   // Audio recording states
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -330,7 +328,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     id: m.id,
     content: m.content || '',
     sender: (m.direction === 'inbound' ? 'client' : 'agent') as 'client' | 'agent',
-    agentName: m.sender?.name || 'Você',
+    agentName: m.sender?.name || 'Voc├¬',
     timestamp: new Date(m.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
     status: m.status as any,
   })) : [];
@@ -386,28 +384,11 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     }
   }, [showSettings]);
 
-  // Helper function to determine if a conversation is Funil or Carteira
-  const getConversationType = (convIndex: number): 'funil' | 'carteira' => {
-    // In real implementation, this would be based on lead status in database
-    // For mock: even indexes are Carteira (closed won), odd are Funil (in progress)
-    return convIndex % 3 === 0 ? 'carteira' : 'funil';
-  };
-
-  // Filter conversations based on search, status, tag filter and active tab
+  // Filter conversations based on search
   const filteredConversations = mappedConversations.filter(conv => {
     const matchesSearch = conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.phone.includes(searchQuery);
-    const matchesStatus = filterStatus === 'respondido' ? conv.isActive :
-      filterStatus === 'nao_respondido' ? !conv.isActive : true; // In the future bind this to real status
-    // Tag filter would match against conversation status/funnel stage in real implementation
-    const matchesTag = !selectedTagFilter || true;
-
-    // Filter by active tab (todos, funil or carteira)
-    const convIndex = mappedConversations.indexOf(conv);
-    const convType = getConversationType(convIndex);
-    const matchesTab = activeConversationTab === 'todos' || activeConversationTab === convType;
-
-    return matchesSearch && matchesStatus && matchesTag && matchesTab;
+    return matchesSearch;
   });
 
   // New lead form validation
@@ -417,9 +398,9 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
 
   const handleCreateLead = () => {
     const errors = {
-      name: newLead.name.trim() === '' ? 'Nome é obrigatório' : '',
-      phone: newLead.phone.trim() === '' ? 'Telefone é obrigatório' : '',
-      origin: newLead.origin === '' ? 'Canal de origem é obrigatório' : '',
+      name: newLead.name.trim() === '' ? 'Nome ├® obrigat├│rio' : '',
+      phone: newLead.phone.trim() === '' ? 'Telefone ├® obrigat├│rio' : '',
+      origin: newLead.origin === '' ? 'Canal de origem ├® obrigat├│rio' : '',
     };
     setNewLeadErrors(errors);
 
@@ -524,41 +505,12 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     fileInputRef.current?.click();
   };
 
-  const uploadFile = async (file: Blob | File, filename: string): Promise<string | null> => {
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file, filename);
-      const { data } = await api.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return data.url;
-    } catch (error) {
-      console.error('File upload error:', error);
-      toast.error('Erro ao fazer upload do arquivo.');
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      toast.info(`Fazendo upload de ${file.name}...`);
-      const url = await uploadFile(file, file.name);
-
-      if (url && selectedConversation) {
-        // Determine type based on mime
-        let type = 'document';
-        if (file.type.startsWith('image/')) type = 'image';
-        else if (file.type.startsWith('video/')) type = 'video';
-        else if (file.type.startsWith('audio/')) type = 'audio';
-
-        storeSendMessage(selectedConversation.id, `📎 Anexo: ${file.name}`, type as any, url);
-        toast.success(`Anexo enviado!`);
+      toast.success(`Anexo selecionado: ${file.name}`);
+      if (selectedConversation) {
+        storeSendMessage(selectedConversation.id, `­ƒôÄ Anexo: ${file.name}`, 'text');
       }
     }
     if (fileInputRef.current) {
@@ -601,7 +553,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
       }, 1000);
 
     } catch (error) {
-      toast.error('Não foi possível acessar o microfone. Verifique as permissões.');
+      toast.error('N├úo foi poss├¡vel acessar o microfone. Verifique as permiss├Áes.');
     }
   };
 
@@ -631,15 +583,13 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     }
   };
 
-  const sendAudio = async () => {
+  const sendAudio = () => {
     if (audioBlob) {
       const duration = formatRecordingTime(recordingTime);
-      toast.info('Enviando áudio...');
-      const url = await uploadFile(audioBlob, `audio-${Date.now()}.webm`);
+      toast.success(`├üudio enviado (${duration})`);
 
-      if (url && selectedConversation) {
-        storeSendMessage(selectedConversation.id, `🎤 Áudio (${duration})`, 'audio', url);
-        toast.success(`Áudio enviado (${duration})`);
+      if (selectedConversation) {
+        storeSendMessage(selectedConversation.id, `­ƒÄñ ├üudio (${duration})`, 'text');
       }
 
       setAudioBlob(null);
@@ -661,7 +611,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
 
   // Handle status selection
   const handleStatusSelect = (statusId: string) => {
-    // Check if it's any of the "Fechado – Ganho" variants
+    // Check if it's any of the "Fechado ÔÇô Ganho" variants
     if (statusId === 'fechado_ganho' || statusId === 'fechado_ganho_mes' || statusId === 'fechado_ganho_historico') {
       // Close settings sheet first, then open sale modal
       setShowSettings(false);
@@ -721,14 +671,14 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
 
   const handleSaveSale = () => {
     const errors: Partial<Record<keyof SaleData, string>> = {};
-    if (!saleData.clientName.trim()) errors.clientName = 'Nome do cliente é obrigatório';
-    if (!saleData.clientDocument.trim()) errors.clientDocument = 'Documento é obrigatório';
-    if (!saleData.clientPhone.trim()) errors.clientPhone = 'Telefone é obrigatório';
+    if (!saleData.clientName.trim()) errors.clientName = 'Nome do cliente ├® obrigat├│rio';
+    if (!saleData.clientDocument.trim()) errors.clientDocument = 'Documento ├® obrigat├│rio';
+    if (!saleData.clientPhone.trim()) errors.clientPhone = 'Telefone ├® obrigat├│rio';
     if (!saleData.productSold.trim()) errors.productSold = 'Informe o que foi vendido';
-    if (!saleData.value.trim() || parseFloat(saleData.value.replace(/\./g, '').replace(',', '.')) <= 0) errors.value = 'Informe um valor válido maior que zero';
+    if (!saleData.value.trim() || parseFloat(saleData.value.replace(/\./g, '').replace(',', '.')) <= 0) errors.value = 'Informe um valor v├ílido maior que zero';
     if (!saleData.paymentMethod) errors.paymentMethod = 'Selecione a forma de pagamento';
-    if (!saleData.paymentCondition) errors.paymentCondition = 'Selecione a condição de pagamento';
-    if (saleData.paymentCondition === 'parcelado' && (!saleData.installments.trim() || parseInt(saleData.installments) <= 0)) errors.installments = 'Informe o número de parcelas';
+    if (!saleData.paymentCondition) errors.paymentCondition = 'Selecione a condi├º├úo de pagamento';
+    if (saleData.paymentCondition === 'parcelado' && (!saleData.installments.trim() || parseInt(saleData.installments) <= 0)) errors.installments = 'Informe o n├║mero de parcelas';
 
     if (Object.keys(errors).length > 0) {
       setSaleErrors(errors);
@@ -741,7 +691,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     setShowSaleModal(false);
     handleBackToMain();
     setShowSettings(false);
-    toast.success('Venda registrada com sucesso! Lead atualizado para Fechado – Ganho');
+    toast.success('Venda registrada com sucesso! Lead atualizado para Fechado ÔÇô Ganho');
     setTimeout(() => setShowPrintView(true), 500);
   };
 
@@ -773,21 +723,21 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
-                <h3 className="font-semibold text-base text-foreground">Observações</h3>
+                <h3 className="font-semibold text-base text-foreground">Observa├º├Áes</h3>
                 <p className="text-xs text-muted-foreground">Adicione notas sobre o lead</p>
               </div>
             </div>
             <Textarea
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
-              placeholder="Digite suas observações aqui..."
+              placeholder="Digite suas observa├º├Áes aqui..."
               className="min-h-[140px] bg-background border-border resize-none text-sm"
             />
             <div className="flex gap-2 pt-2">
               <Button variant="outline" onClick={handleBackToMain} className="flex-1 h-11">
                 Cancelar
               </Button>
-              <Button onClick={() => { toast.success('Observações salvas'); handleBackToMain(); }} className="flex-1 h-11">
+              <Button onClick={() => { toast.success('Observa├º├Áes salvas'); handleBackToMain(); }} className="flex-1 h-11">
                 Salvar
               </Button>
             </div>
@@ -1016,7 +966,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
             </SelectTrigger>
             <SelectContent className="bg-[#ffffff] dark:bg-[#233138] border-[#d1d7db] dark:border-[#3b4a54]">
               <SelectItem value="respondido">Respondido</SelectItem>
-              <SelectItem value="nao_respondido">Não respondido</SelectItem>
+              <SelectItem value="nao_respondido">N├úo respondido</SelectItem>
               <SelectItem value="todas">Todas</SelectItem>
             </SelectContent>
           </Select>
@@ -1150,16 +1100,13 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#25d366]" />
                   <span className="text-[11px] text-[#667781] dark:text-[#8696a0]">
-                    {conv.status === 'ia' ? 'Atendimento automático (IA)' :
+                    {conv.status === 'ia' ? 'Atendimento autom├ítico (IA)' :
                       conv.status === 'manual' ? 'Atendimento manual' : 'Aguardando'}
                   </span>
                   <span className={cn(
-                    "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded",
-                    getConversationType(mappedConversations.indexOf(conv)) === 'carteira'
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                   )}>
-                    {getConversationType(mappedConversations.indexOf(conv)) === 'carteira' ? 'Carteira' : 'Funil'}
+                    Ativo
                   </span>
                 </div>
               </div>
@@ -1297,7 +1244,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                         <FileText className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent><p>Observações salvas</p></TooltipContent>
+                    <TooltipContent><p>Observa├º├Áes salvas</p></TooltipContent>
                   </Tooltip>
                 )}
 
@@ -1436,7 +1383,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                         )}>
                           <span className="text-[11px] text-[#667781]">{msg.timestamp}</span>
                           {msg.sender === 'agent' && msg.status === 'read' && (
-                            <span className="text-[11px] text-[#53bdeb]">✓✓</span>
+                            <span className="text-[11px] text-[#53bdeb]">Ô£ôÔ£ô</span>
                           )}
                         </div>
                       </div>
@@ -1498,7 +1445,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                     <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-[#ffffff] dark:bg-[#2a3942] rounded-full">
                       <Mic className="w-4 h-4 text-[#54656f]" />
                       <span className="text-sm text-[#54656f] dark:text-[#8696a0]">
-                        Áudio gravado ({formatRecordingTime(recordingTime)})
+                        ├üudio gravado ({formatRecordingTime(recordingTime)})
                       </span>
                     </div>
                     <Button
@@ -1560,7 +1507,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               <MessageSquare className="w-7 h-7 text-[#00a884]" />
             </div>
             <p className="text-base font-medium text-[#41525d]">Selecione uma conversa</p>
-            <p className="text-sm text-[#667781]">Escolha uma conversa na lista para começar</p>
+            <p className="text-sm text-[#667781]">Escolha uma conversa na lista para come├ºar</p>
           </div>
         </div>
       )}
@@ -1674,11 +1621,11 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
         >
           <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/30">
             <SheetTitle className="text-base font-semibold">
-              {activePanel === 'main' ? 'Configurações' :
-                activePanel === 'notes' ? 'Observações' :
+              {activePanel === 'main' ? 'Configura├º├Áes' :
+                activePanel === 'notes' ? 'Observa├º├Áes' :
                   activePanel === 'schedule' ? 'Agendar Retorno' :
                     activePanel === 'transfer' ? 'Transferir Atendimento' :
-                      activePanel === 'temperature' ? 'Temperatura' : 'Configurações'}
+                      activePanel === 'temperature' ? 'Temperatura' : 'Configura├º├Áes'}
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 overflow-auto" style={{ maxHeight: isMobile ? 'calc(85vh - 60px)' : 'calc(100vh - 60px)' }}>
@@ -1722,7 +1669,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                     Marcar Agenda
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Selecionando horário para {selectedConversation.name}
+                    Selecionando hor├írio para {selectedConversation.name}
                   </span>
                 </div>
               </div>
@@ -1788,7 +1735,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
             <DialogTitle className="text-lg font-semibold">Registrar Venda</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Preencha as informações completas para concluir a venda.
+              Preencha as informa├º├Áes completas para concluir a venda.
             </DialogDescription>
           </DialogHeader>
 
@@ -1861,15 +1808,15 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                       <Package className="w-4 h-4" /> Produto
                     </button>
                     <button type="button" onClick={() => setSaleData(prev => ({ ...prev, saleType: 'servico' }))} className={cn("flex-1 h-11 rounded-lg border-2 flex items-center justify-center gap-2 text-sm font-medium transition-all", saleData.saleType === 'servico' ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-primary/50")}>
-                      <Wrench className="w-4 h-4" /> Serviço
+                      <Wrench className="w-4 h-4" /> Servi├ºo
                     </button>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase">{saleData.saleType === 'produto' ? 'Produto vendido' : 'Serviço vendido'} <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase">{saleData.saleType === 'produto' ? 'Produto vendido' : 'Servi├ºo vendido'} <span className="text-destructive">*</span></Label>
                     <Input
-                      placeholder={saleData.saleType === 'produto' ? "Ex: Sofá, Mesa" : "Ex: Instalação, Consultoria"}
+                      placeholder={saleData.saleType === 'produto' ? "Ex: Sof├í, Mesa" : "Ex: Instala├º├úo, Consultoria"}
                       value={saleData.productSold}
                       onChange={(e) => { setSaleData(prev => ({ ...prev, productSold: e.target.value })); if (saleErrors.productSold) setSaleErrors(prev => ({ ...prev, productSold: '' })); }}
                       className={cn("h-11 text-[16px]", saleErrors.productSold && "border-destructive")}
@@ -1897,21 +1844,21 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                       <SelectTrigger className={cn("h-11", saleErrors.paymentMethod && "border-destructive")}><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent className="z-[70]">
                         <SelectItem value="pix">PIX</SelectItem>
-                        <SelectItem value="cartao_vista">Cartão à Vista</SelectItem>
-                        <SelectItem value="cartao_parcelado">Cartão Parcelado</SelectItem>
+                        <SelectItem value="cartao_vista">Cart├úo ├á Vista</SelectItem>
+                        <SelectItem value="cartao_parcelado">Cart├úo Parcelado</SelectItem>
                         <SelectItem value="boleto">Boleto</SelectItem>
-                        <SelectItem value="transferencia">Transferência</SelectItem>
+                        <SelectItem value="transferencia">Transfer├¬ncia</SelectItem>
                         <SelectItem value="dinheiro">Dinheiro</SelectItem>
                       </SelectContent>
                     </Select>
                     {saleErrors.paymentMethod && <span className="text-xs text-destructive">{saleErrors.paymentMethod}</span>}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase">Condição <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase">Condi├º├úo <span className="text-destructive">*</span></Label>
                     <Select value={saleData.paymentCondition} onValueChange={(value: typeof saleData.paymentCondition) => { setSaleData(prev => ({ ...prev, paymentCondition: value, installments: value === 'avista' ? '' : prev.installments })); if (saleErrors.paymentCondition) setSaleErrors(prev => ({ ...prev, paymentCondition: '' })); }}>
                       <SelectTrigger className={cn("h-11", saleErrors.paymentCondition && "border-destructive")}><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent className="z-[70]">
-                        <SelectItem value="avista">À Vista</SelectItem>
+                        <SelectItem value="avista">├Ç Vista</SelectItem>
                         <SelectItem value="parcelado">Parcelado</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1920,7 +1867,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 </div>
                 {saleData.paymentCondition === 'parcelado' && (
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase">Número de Parcelas <span className="text-destructive">*</span></Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase">N├║mero de Parcelas <span className="text-destructive">*</span></Label>
                     <Input
                       type="number"
                       min="1"
@@ -1937,14 +1884,14 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               {/* Entrega */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-primary uppercase tracking-wider border-b border-border/30 pb-2 flex items-center gap-2">
-                  {saleData.saleType === 'produto' ? <><Truck className="w-4 h-4" /> Entrega do Produto</> : <><Wrench className="w-4 h-4" /> Execução do Serviço</>}
+                  {saleData.saleType === 'produto' ? <><Truck className="w-4 h-4" /> Entrega do Produto</> : <><Wrench className="w-4 h-4" /> Execu├º├úo do Servi├ºo</>}
                 </h3>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setSaleData(prev => ({ ...prev, deliveryMode: 'immediate', deliveryDate: '', deliveryShift: '', deliveryTime: '', deliveryContact: '' }))} className={cn("flex-1 h-11 rounded-lg border-2 flex items-center justify-center gap-2 text-sm font-medium transition-all", saleData.deliveryMode === 'immediate' ? "border-success bg-success/10 text-success" : "border-border bg-background text-muted-foreground hover:border-success/50")}>
-                    <CheckCircle className="w-4 h-4" /> {saleData.saleType === 'produto' ? 'Entrega Imediata' : 'Já Executado'}
+                    <CheckCircle className="w-4 h-4" /> {saleData.saleType === 'produto' ? 'Entrega Imediata' : 'J├í Executado'}
                   </button>
                   <button type="button" onClick={() => setSaleData(prev => ({ ...prev, deliveryMode: 'scheduled' }))} className={cn("flex-1 h-11 rounded-lg border-2 flex items-center justify-center gap-2 text-sm font-medium transition-all", saleData.deliveryMode === 'scheduled' ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:border-primary/50")}>
-                    <Calendar className="w-4 h-4" /> {saleData.saleType === 'produto' ? 'Agendar Entrega' : 'Agendar Execução'}
+                    <Calendar className="w-4 h-4" /> {saleData.saleType === 'produto' ? 'Agendar Entrega' : 'Agendar Execu├º├úo'}
                   </button>
                 </div>
                 {saleData.deliveryMode === 'scheduled' && (
@@ -1958,7 +1905,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                       <Select value={saleData.deliveryShift} onValueChange={(value: typeof saleData.deliveryShift) => setSaleData(prev => ({ ...prev, deliveryShift: value }))}>
                         <SelectTrigger className="h-11"><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent className="z-[70]">
-                          <SelectItem value="manha">Manhã</SelectItem>
+                          <SelectItem value="manha">Manh├ú</SelectItem>
                           <SelectItem value="tarde">Tarde</SelectItem>
                           <SelectItem value="noite">Noite</SelectItem>
                           <SelectItem value="personalizado">Personalizado</SelectItem>
@@ -1966,7 +1913,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase">Horário</Label>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase">Hor├írio</Label>
                       <Input type="time" value={saleData.deliveryTime} onChange={(e) => setSaleData(prev => ({ ...prev, deliveryTime: e.target.value }))} className="h-11 text-[16px]" />
                     </div>
                     <div className="space-y-2">
@@ -1977,11 +1924,11 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 )}
               </div>
 
-              {/* Observações */}
+              {/* Observa├º├Áes */}
               <div className="space-y-2 pb-4">
-                <Label className="text-xs font-medium text-muted-foreground uppercase">Observações</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase">Observa├º├Áes</Label>
                 <Textarea
-                  placeholder="Informações adicionais sobre a venda..."
+                  placeholder="Informa├º├Áes adicionais sobre a venda..."
                   value={saleData.observations}
                   onChange={(e) => setSaleData(prev => ({ ...prev, observations: e.target.value }))}
                   className="min-h-[80px] resize-none"
@@ -2102,7 +2049,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
             <div className="space-y-2">
               <Label className="text-sm font-medium">COD REF / ID</Label>
               <Input
-                placeholder="Referência (opcional)"
+                placeholder="Refer├¬ncia (opcional)"
                 value={newLead.reference}
                 onChange={(e) => setNewLead(prev => ({ ...prev, reference: e.target.value }))}
                 className="h-11 text-[16px]"

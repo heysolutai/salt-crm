@@ -247,7 +247,8 @@ export class UAZAPIService {
                 timestamp: message.messageTimestamp || Date.now(),
                 isGroup,
                 senderName: message.pushName || message.senderName || chat?.wa_name || chat?.wa_contactName,
-                chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid
+                chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid,
+                fromMe
             };
         } catch (error) {
             logger.error('Failed to parse webhook message:', error);

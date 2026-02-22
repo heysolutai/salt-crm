@@ -1,0 +1,204 @@
+[TAILING] Tailing last 200 lines for [saltcrm-api] process (change the value with --lines option)
+/root/.pm2/logs/saltcrm-api-error.log last 200 lines:
+/root/.pm2/logs/saltcrm-api-out.log last 200 lines:
+0|saltcrm- | ================= INCOMING UAZAPI WEBHOOK =================
+0|saltcrm- | {
+0|saltcrm- |   "BaseUrl": "https://saltdigi.uazapi.com",
+0|saltcrm- |   "EventType": "messages_update",
+0|saltcrm- |   "event": {
+0|saltcrm- |     "BroadcastListOwner": "",
+0|saltcrm- |     "Chat": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "IsFromMe": false,
+0|saltcrm- |     "IsGroup": false,
+0|saltcrm- |     "MessageIDs": [
+0|saltcrm- |       "3EB0C8C4EA350354240912"
+0|saltcrm- |     ],
+0|saltcrm- |     "Sender": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "Timestamp": 1771802923,
+0|saltcrm- |     "Type": "Delivered",
+0|saltcrm- |     "chatid": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "chatlid": "161194937679957@lid",
+0|saltcrm- |     "sender_lid": "161194937679957@lid",
+0|saltcrm- |     "sender_pn": "5522999120572@s.whatsapp.net"
+0|saltcrm- |   },
+0|saltcrm- |   "instanceName": "salt-saltdemo-teste2",
+0|saltcrm- |   "owner": "556299197953",
+0|saltcrm- |   "state": "Delivered",
+0|saltcrm- |   "token": "bed336cf-32bb-45c1-a1d1-760a573066f7",
+0|saltcrm- |   "type": "ReadReceipt"
+0|saltcrm- | }
+0|saltcrm- | ============================================================
+0|saltcrm- | 2026-02-22 23:28:45 [[32minfo[39m]: POST /api/v1/whatsapp/webhook 200 - 4ms
+0|saltcrm- | ================= INCOMING UAZAPI WEBHOOK =================
+0|saltcrm- | {
+0|saltcrm- |   "BaseUrl": "https://saltdigi.uazapi.com",
+0|saltcrm- |   "EventType": "messages",
+0|saltcrm- |   "chat": {
+0|saltcrm- |     "chatbot_agentResetMemoryAt": 0,
+0|saltcrm- |     "chatbot_disableUntil": 0,
+0|saltcrm- |     "chatbot_lastTriggerAt": 0,
+0|saltcrm- |     "chatbot_lastTrigger_id": "",
+0|saltcrm- |     "id": "rba6b2fcd9313f4",
+0|saltcrm- |     "image": "",
+0|saltcrm- |     "imagePreview": "https://pps.whatsapp.net/v/t61.24694-24/466897930_612166577805010_6850983104285033751_n.jpg?stp=dst-jpg_s96x96_tt6&ccb=11-4&oh=01_Q5Aa3wElLMSj27pK470RAQD_PpI20UFgWAJAbBI3pSx2_pPyrA&oe=69A6C87F&_nc_sid=5e03e0&_nc_cat=104",
+0|saltcrm- |     "lead_assignedAttendant_id": "",
+0|saltcrm- |     "lead_email": "",
+0|saltcrm- |     "lead_field01": "",
+0|saltcrm- |     "lead_field02": "",
+0|saltcrm- |     "lead_field03": "",
+0|saltcrm- |     "lead_field04": "",
+0|saltcrm- |     "lead_field05": "",
+0|saltcrm- |     "lead_field06": "",
+0|saltcrm- |     "lead_field07": "",
+0|saltcrm- |     "lead_field08": "",
+0|saltcrm- |     "lead_field09": "",
+0|saltcrm- |     "lead_field10": "",
+0|saltcrm- |     "lead_field11": "",
+0|saltcrm- |     "lead_field12": "",
+0|saltcrm- |     "lead_field13": "",
+0|saltcrm- |     "lead_field14": "",
+0|saltcrm- |     "lead_field15": "",
+0|saltcrm- |     "lead_field16": "",
+0|saltcrm- |     "lead_field17": "",
+0|saltcrm- |     "lead_field18": "",
+0|saltcrm- |     "lead_field19": "",
+0|saltcrm- |     "lead_field20": "",
+0|saltcrm- |     "lead_fullName": "",
+0|saltcrm- |     "lead_isTicketOpen": false,
+0|saltcrm- |     "lead_kanbanOrder": 0,
+0|saltcrm- |     "lead_name": "",
+0|saltcrm- |     "lead_notes": "",
+0|saltcrm- |     "lead_personalid": "",
+0|saltcrm- |     "lead_status": "",
+0|saltcrm- |     "lead_tags": [],
+0|saltcrm- |     "name": "Thales Faria",
+0|saltcrm- |     "owner": "556299197953",
+0|saltcrm- |     "phone": "+55 22 99912-0572",
+0|saltcrm- |     "wa_archived": false,
+0|saltcrm- |     "wa_chatid": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "wa_chatlid": "161194937679957@lid",
+0|saltcrm- |     "wa_contactName": "",
+0|saltcrm- |     "wa_ephemeralExpiration": 0,
+0|saltcrm- |     "wa_fastid": "556299197953:5522999120572",
+0|saltcrm- |     "wa_isBlocked": false,
+0|saltcrm- |     "wa_isGroup": false,
+0|saltcrm- |     "wa_isGroup_admin": false,
+0|saltcrm- |     "wa_isGroup_announce": false,
+0|saltcrm- |     "wa_isGroup_community": false,
+0|saltcrm- |     "wa_isGroup_member": false,
+0|saltcrm- |     "wa_isPinned": false,
+0|saltcrm- |     "wa_label": [],
+0|saltcrm- |     "wa_lastMessageSender": "86475626557487@lid",
+0|saltcrm- |     "wa_lastMessageTextVote": "vc testou sobre aquela familia",
+0|saltcrm- |     "wa_lastMessageType": "ExtendedTextMessage",
+0|saltcrm- |     "wa_lastMsgTimestamp": 1771802927000,
+0|saltcrm- |     "wa_muteEndTime": 0,
+0|saltcrm- |     "wa_name": "Thales Faria",
+0|saltcrm- |     "wa_unreadCount": 0
+0|saltcrm- |   },
+0|saltcrm- |   "chatSource": "updated",
+0|saltcrm- |   "instanceName": "salt-saltdemo-teste2",
+0|saltcrm- |   "message": {
+0|saltcrm- |     "buttonOrListid": "",
+0|saltcrm- |     "chatid": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "chatlid": "161194937679957@lid",
+0|saltcrm- |     "content": {
+0|saltcrm- |       "text": "vc testou sobre aquela familia",
+0|saltcrm- |       "contextInfo": {
+0|saltcrm- |         "ephemeralSettingTimestamp": 1770815823,
+0|saltcrm- |         "disappearingMode": {
+0|saltcrm- |           "initiator": 0,
+0|saltcrm- |           "trigger": 1,
+0|saltcrm- |           "initiatedByMe": false
+0|saltcrm- |         }
+0|saltcrm- |       },
+0|saltcrm- |       "inviteLinkGroupTypeV2": 0
+0|saltcrm- |     },
+0|saltcrm- |     "convertOptions": "",
+0|saltcrm- |     "edited": "",
+0|saltcrm- |     "fromMe": true,
+0|saltcrm- |     "groupName": "Unknown",
+0|saltcrm- |     "id": "556299197953:3EB044563002450BB8A61E",
+0|saltcrm- |     "isGroup": false,
+0|saltcrm- |     "mediaType": "",
+0|saltcrm- |     "messageTimestamp": 1771802927000,
+0|saltcrm- |     "messageType": "ExtendedTextMessage",
+0|saltcrm- |     "messageid": "3EB044563002450BB8A61E",
+0|saltcrm- |     "owner": "556299197953",
+0|saltcrm- |     "quoted": "",
+0|saltcrm- |     "reaction": "",
+0|saltcrm- |     "sender": "86475626557487@lid",
+0|saltcrm- |     "senderName": "Yago Machado",
+0|saltcrm- |     "sender_lid": "86475626557487@lid",
+0|saltcrm- |     "sender_pn": "556299197953@s.whatsapp.net",
+0|saltcrm- |     "source": "web",
+0|saltcrm- |     "status": "",
+0|saltcrm- |     "text": "vc testou sobre aquela familia",
+0|saltcrm- |     "track_id": "",
+0|saltcrm- |     "track_source": "",
+0|saltcrm- |     "type": "text",
+0|saltcrm- |     "vote": "",
+0|saltcrm- |     "wasSentByApi": false
+0|saltcrm- |   },
+0|saltcrm- |   "owner": "556299197953",
+0|saltcrm- |   "token": "bed336cf-32bb-45c1-a1d1-760a573066f7"
+0|saltcrm- | }
+0|saltcrm- | ============================================================
+0|saltcrm- | 2026-02-22 23:28:47 [[32minfo[39m]: POST /api/v1/whatsapp/webhook 200 - 12ms
+0|saltcrm- | ================= INCOMING UAZAPI WEBHOOK =================
+0|saltcrm- | {
+0|saltcrm- |   "BaseUrl": "https://saltdigi.uazapi.com",
+0|saltcrm- |   "EventType": "messages_update",
+0|saltcrm- |   "event": {
+0|saltcrm- |     "BroadcastListOwner": "",
+0|saltcrm- |     "Chat": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "IsFromMe": false,
+0|saltcrm- |     "IsGroup": false,
+0|saltcrm- |     "MessageIDs": [
+0|saltcrm- |       "3EB044563002450BB8A61E"
+0|saltcrm- |     ],
+0|saltcrm- |     "Sender": "161194937679957:63@lid",
+0|saltcrm- |     "Timestamp": 1771802927,
+0|saltcrm- |     "Type": "Delivered",
+0|saltcrm- |     "chatid": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "chatlid": "161194937679957@lid",
+0|saltcrm- |     "sender_lid": "16119493767995763@lid",
+0|saltcrm- |     "sender_pn": null
+0|saltcrm- |   },
+0|saltcrm- |   "instanceName": "salt-saltdemo-teste2",
+0|saltcrm- |   "owner": "556299197953",
+0|saltcrm- |   "state": "Delivered",
+0|saltcrm- |   "token": "bed336cf-32bb-45c1-a1d1-760a573066f7",
+0|saltcrm- |   "type": "ReadReceipt"
+0|saltcrm- | }
+0|saltcrm- | ============================================================
+0|saltcrm- | 2026-02-22 23:28:48 [[32minfo[39m]: POST /api/v1/whatsapp/webhook 200 - 4ms
+0|saltcrm- | ================= INCOMING UAZAPI WEBHOOK =================
+0|saltcrm- | {
+0|saltcrm- |   "BaseUrl": "https://saltdigi.uazapi.com",
+0|saltcrm- |   "EventType": "messages_update",
+0|saltcrm- |   "event": {
+0|saltcrm- |     "BroadcastListOwner": "",
+0|saltcrm- |     "Chat": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "IsFromMe": false,
+0|saltcrm- |     "IsGroup": false,
+0|saltcrm- |     "MessageIDs": [
+0|saltcrm- |       "3EB044563002450BB8A61E"
+0|saltcrm- |     ],
+0|saltcrm- |     "Sender": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "Timestamp": 1771802927,
+0|saltcrm- |     "Type": "Delivered",
+0|saltcrm- |     "chatid": "5522999120572@s.whatsapp.net",
+0|saltcrm- |     "chatlid": "161194937679957@lid",
+0|saltcrm- |     "sender_lid": "161194937679957@lid",
+0|saltcrm- |     "sender_pn": "5522999120572@s.whatsapp.net"
+0|saltcrm- |   },
+0|saltcrm- |   "instanceName": "salt-saltdemo-teste2",
+0|saltcrm- |   "owner": "556299197953",
+0|saltcrm- |   "state": "Delivered",
+0|saltcrm- |   "token": "bed336cf-32bb-45c1-a1d1-760a573066f7",
+0|saltcrm- |   "type": "ReadReceipt"
+0|saltcrm- | }
+0|saltcrm- | ============================================================
+0|saltcrm- | 2026-02-22 23:28:49 [[32minfo[39m]: POST /api/v1/whatsapp/webhook 200 - 6ms
+

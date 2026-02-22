@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import api from '@/lib/api';
 import { socketClient } from '@/lib/socket';
 
@@ -112,13 +112,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         }
     },
 
-    sendMessage: async (conversationId, content, contentType = 'text', mediaUrl?: string) => {
+    sendMessage: async (conversationId, content, contentType = 'text') => {
         try {
             // Optimistic UI update could be done here
             const { data } = await api.post(`/conversations/${conversationId}/messages`, {
                 content,
-                contentType,
-                mediaUrl
+                contentType
             });
             // Result comes via socket typically, or we can push it
             set((state) => {

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env.js';
+import path from 'path';
 import { errorMiddleware, notFoundMiddleware } from './middlewares/error.middleware.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { usersRoutes } from './modules/users/users.routes.js';
@@ -9,6 +10,7 @@ import { leadsRoutes } from './modules/leads/leads.routes.js';
 import { conversationsRoutes } from './modules/conversations/conversations.routes.js';
 import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { webhookRoutes } from './modules/webhooks/webhook.routes.js';
+import { uploadRoutes } from './modules/upload/upload.routes.js';
 import { logger } from './utils/logger.js';
 
 const app = express();
@@ -46,6 +48,12 @@ app.get('/health', (req, res) => {
         environment: env.NODE_ENV,
     });
 });
+
+// Expose public uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+
+// Upload routes
+app.use('/api/v1/upload', uploadRoutes);
 
 // ============ UAZAPI WEBHOOK - CATCH ALL POSSIBLE PATHS ============
 // UAZAPI may hit /webhook, /api/v1/whatsapp/webhook, etc.
