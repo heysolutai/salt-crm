@@ -120,12 +120,6 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
             return;
         }
 
-        // Skip outbound messages (sent by us) — only inbound creates leads/conversations
-        if (message.fromMe) {
-            res.status(200).json({ success: true, message: 'Outbound message ignored' });
-            return;
-        }
-
         // Find connection by instance ID
         const connection = await prisma.whatsappConnection.findFirst({
             where: { instanceId: message.instanceId },
