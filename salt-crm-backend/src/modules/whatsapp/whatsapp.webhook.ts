@@ -84,6 +84,19 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
                     });
                     if (updated.count > 0) {
                         logger.info(`Updated connection status for ${instanceName} to ${newStatus}`);
+
+                        // Emit via Socket.io so frontend reacts instantly
+                        const conn = await prisma.whatsappConnection.findFirst({
+                            where: { instanceId: instanceName },
+                            select: { id: true, tenantId: true }
+                        });
+                        if (conn && socketService) {
+                            socketService.emitToTenant(conn.tenantId, 'whatsapp:status', {
+                                connectionId: conn.id,
+                                instanceName,
+                                status: newStatus
+                            });
+                        }
                     } else {
                         logger.warn(`No DB connection found for instanceId: ${instanceName}`);
                     }
