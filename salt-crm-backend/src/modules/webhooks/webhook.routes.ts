@@ -24,6 +24,11 @@ const verifyInternalKey = (req: Request, res: Response, next: Function) => {
     next();
 };
 
+// UAZAPI Webhook - GET handler for health check / URL verification
+router.get('/uazapi/webhook', (_req: Request, res: Response) => {
+    res.status(200).json({ status: 'ok', message: 'Webhook endpoint active' });
+});
+
 // UAZAPI Webhook - receives messages from WhatsApp
 router.post('/uazapi/webhook', async (req: Request, res: Response) => {
     console.log('================= INCOMING UAZAPI WEBHOOK PAYLOAD =================');
