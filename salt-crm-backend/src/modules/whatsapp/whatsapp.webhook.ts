@@ -65,9 +65,9 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
             (req.body.event === 'status.instance' && req.body.data);
 
         if (isConnectionEvent) {
-            const instanceName = req.body.instanceName || req.body.instance ||
+            const instanceName = req.body.instanceName || req.body.instance?.name ||
                 req.body.data?.instance || req.body.sender?.split('@')?.[0];
-            const state = req.body.data?.state || req.body.state ||
+            const state = req.body.instance?.status || req.body.data?.state || req.body.state ||
                 req.body.data?.status || req.body.status;
 
             logger.info(`Connection event: instance=${instanceName}, state=${state}`);
