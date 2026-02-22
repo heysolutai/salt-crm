@@ -76,6 +76,14 @@ class SocketClient {
     offConversationUpdate(callback: (conversation: any) => void) {
         this.socket?.off('conversation:updated', callback);
     }
+
+    onWhatsappStatus(callback: (data: { connectionId: string, instanceName: string, status: string }) => void) {
+        this.socket?.on('whatsapp:status', callback);
+    }
+
+    offWhatsappStatus(callback: (data: { connectionId: string, instanceName: string, status: string }) => void) {
+        this.socket?.off('whatsapp:status', callback);
+    }
 }
 
 export const socketClient = new SocketClient();

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { socketClient } from '@/lib/socket';
 import { Header } from '@/components/ui/header';
 import { IOSCard, IOSSection, IOSSectionItem } from '@/components/ui/ios-card';
 import { Button } from '@/components/ui/button';
@@ -220,40 +221,26 @@ const Outros: React.FC = () => {
     }
   }, [activeSection]);
 
-  // Polling para checar status da conexão enquanto o modal de QR Code está aberto
+  // Socket.io listener for instant WhatsApp connection status updates
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    const handleWhatsappStatus = (data: { connectionId: string, instanceName: string, status: string }) => {
+      // Update local state
+      setWhatsappConnections(prev => prev.map(c =>
+        c.id === data.connectionId ? { ...c, status: data.status as any } : c
+      ));
 
-    if (showQrCodeForConnection) {
-      interval = setInterval(async () => {
-        try {
-          const response = await whatsappApi.getAll();
-          const mapped = response.data.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            phone: c.phoneNumber,
-            status: c.status === 'connected' ? 'connected' : 'disconnected',
-            connectedAt: c.createdAt
-          }));
-          setWhatsappConnections(mapped);
-
-          const current = mapped.find((c: any) => c.id === showQrCodeForConnection);
-          if (current && current.status === 'connected') {
-            setShowQrCodeForConnection(null);
-            toast({
-              title: 'WhatsApp conectado!',
-              description: 'A caixa de entrada foi vinculada com sucesso.',
-            });
-          }
-        } catch (error) {
-          console.error('Error polling connection status:', error);
-        }
-      }, 3000); // Check every 3 seconds
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
+      // If connected and QR code is showing for this connection, close it
+      if (data.status === 'connected' && showQrCodeForConnection === data.connectionId) {
+        setShowQrCodeForConnection(null);
+        toast({
+          title: 'WhatsApp conectado!',
+          description: 'A caixa de entrada foi vinculada com sucesso.',
+        });
+      }
     };
+
+    socketClient.onWhatsappStatus(handleWhatsappStatus);
+    return () => socketClient.offWhatsappStatus(handleWhatsappStatus);
   }, [showQrCodeForConnection, toast]);
 
   // Limite de WhatsApps permitidos (vem do plano/contrato do tenant)
@@ -2047,44 +2034,7 @@ TOOLS DISPONÍVEIS:
       }
     };
 
-    // Auto-poll connection status while QR code is showing
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useEffect(() => {
-      if (!showQrCodeForConnection) return;
-
-      const pollInterval = setInterval(async () => {
-        try {
-          const response = await whatsappApi.getAll();
-          const connections = response.data;
-          const current = connections.find((c: any) => c.id === showQrCodeForConnection);
-
-          if (current && current.status === 'connected') {
-            clearInterval(pollInterval);
-            setShowQrCodeForConnection(null);
-            setQrCodeData(null);
-
-            // Update local state
-            const mapped = connections.map((c: any) => ({
-              id: c.id,
-              name: c.name,
-              phone: c.phoneNumber,
-              status: c.status === 'connected' ? 'connected' : 'disconnected',
-              connectedAt: c.createdAt
-            }));
-            setWhatsappConnections(mapped);
-
-            toast({
-              title: 'WhatsApp conectado!',
-              description: 'A caixa de entrada foi vinculada com sucesso.',
-            });
-          }
-        } catch (error) {
-          // Silently fail polling
-        }
-      }, 5000); // Check every 5 seconds
-
-      return () => clearInterval(pollInterval);
-    }, [showQrCodeForConnection]);
+    // Socket.io handles QR code dismissal (see top-level useEffect)
 
     return (
       <div className="min-h-screen bg-background pb-[var(--safe-area-bottom)]">
