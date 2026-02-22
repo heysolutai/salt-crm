@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
+import { socketClient } from '@/lib/socket';
 
 // Map backend roles to frontend role names
 const roleMap: Record<string, string> = {
@@ -46,6 +47,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             localStorage.setItem('salt_token', data.access_token);
             localStorage.setItem('salt_refresh_token', data.refresh_token);
 
+            // Connect to real-time socket
+            socketClient.connect(data.access_token);
+
             const user = data.user;
             const frontendRole = roleMap[user.role] || 'TENANT_VENDEDOR';
 
@@ -84,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             localStorage.removeItem('salt_token');
             localStorage.removeItem('salt_refresh_token');
             localStorage.removeItem('salt_session');
+            socketClient.disconnect();
             set({ user: null, isAuthenticated: false });
         }
     },
@@ -102,12 +107,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 name: data.name,
             }));
 
+            const token = localStorage.getItem('salt_token');
+            if (token) {
+                socketClient.connect(token);
+            }
+
             set({ user: data, isAuthenticated: true });
         } catch {
             set({ user: null, isAuthenticated: false });
             localStorage.removeItem('salt_token');
             localStorage.removeItem('salt_refresh_token');
             localStorage.removeItem('salt_session');
+            socketClient.disconnect();
         }
     },
 

@@ -56,12 +56,7 @@ import { SellerCalendarView } from '@/components/funil/SellerCalendarView';
 import { SalePrintView } from '@/components/sales/SalePrintView';
 import { useLeadSchedules, LeadSchedule } from '@/stores/leads/lead-schedules-store';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { 
-  mockConversations as importedMockConversations, 
-  getMessagesForConversation,
-  MockConversation,
-  MockMessage 
-} from '@/lib/mock-conversations';
+import { useChatStore } from '@/stores/chat-store';
 
 interface Conversation {
   id: string;
@@ -93,19 +88,8 @@ interface InlineConversationsPanelProps {
   initialConversationName?: string | null;
 }
 
-// Use imported mock conversations
-const mockConversations: Conversation[] = importedMockConversations.map(c => ({
-  id: c.id,
-  name: c.name,
-  phone: c.phone,
-  avatar: c.avatar,
-  lastMessage: c.lastMessage,
-  timestamp: c.timestamp,
-  unreadCount: c.unreadCount,
-  status: c.status,
-  isActive: c.isActive,
-  tags: c.tags,
-}));
+// Deprecated mock conversations array
+// Left blank because we fetch from API now
 
 // Mock vendedores list
 const mockVendedores = [
@@ -149,28 +133,28 @@ const allStatusOptions = [
   { id: 'morno', label: 'Morno', color: '#F5A15D' },
   { id: 'quente', label: 'Quente', color: '#E96A6A' },
   { id: 'qualificado', label: 'Qualificado', color: '#4FC3B5' },
-  { 
-    id: 'em_atendimento', 
-    label: 'Em Atendimento', 
-    color: '#9B7CF4', 
+  {
+    id: 'em_atendimento',
+    label: 'Em Atendimento',
+    color: '#9B7CF4',
     hasSubStatus: true,
     subStatuses: [
       { id: 'carteira', label: 'Carteira' },
       { id: 'marcar_agenda', label: 'Marcar Agenda' },
     ]
   },
-  { 
-    id: 'em_negociacao', 
-    label: 'Em Negociação', 
+  {
+    id: 'em_negociacao',
+    label: 'Em Negociação',
     color: '#F4C95D',
     hasSubStatus: true,
     subStatuses: [
       { id: 'proposta_enviada', label: 'Proposta Enviada' },
     ]
   },
-  { 
-    id: 'fechado_ganho', 
-    label: 'Fechado – Ganho', 
+  {
+    id: 'fechado_ganho',
+    label: 'Fechado – Ganho',
     color: '#4CAF50',
     hasSubStatus: true,
     subStatuses: [
@@ -257,12 +241,21 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   const isMobile = useIsMobile();
   const { role } = useUserRole();
   const canPinConversation = role === 'TENANT_ADMIN' || role === 'TENANT_GERENTE';
-  
+
+  const {
+    conversations: storeConversations,
+    messages: storeMessages,
+    fetchConversations,
+    sendMessage: storeSendMessage,
+    initSocketListeners,
+    activeConversationId,
+    setActiveConversation
+  } = useChatStore();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('respondido');
   const [activeConversationTab, setActiveConversationTab] = useState<'todos' | 'funil' | 'carteira'>('todos');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -318,6 +311,34 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   const hasObservations = observations.trim().length > 0;
   const hasScheduledMessage = scheduleDate.trim().length > 0 && scheduleMessage.trim().length > 0;
 
+  const mappedConversations: Conversation[] = storeConversations.map(c => ({
+    id: c.id,
+    name: c.lead?.name || c.contactPhone || 'Desconhecido',
+    phone: c.contactPhone,
+    avatar: c.lead?.avatarUrl || undefined,
+    lastMessage: '...', // We don't get lastMessage content in the list endpoint yet, but that's ok
+    timestamp: c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '',
+    unreadCount: c.unreadCount || 0,
+    status: (c.status === 'ai_handling' ? 'ia' : c.status === 'manual' ? 'manual' : 'waiting') as any,
+    isActive: true, // We can determine this if needed
+    tags: [],
+  }));
+
+  const messages = selectedConversation ? (storeMessages[selectedConversation.id] || []).map(m => ({
+    id: m.id,
+    content: m.content || '',
+    sender: (m.direction === 'inbound' ? 'client' : 'agent') as 'client' | 'agent',
+    agentName: m.sender?.name || 'Você',
+    timestamp: new Date(m.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    status: m.status as any,
+  })) : [];
+
+  // Initialize socket and fetch lists on mount
+  useEffect(() => {
+    fetchConversations();
+    initSocketListeners();
+  }, [fetchConversations, initSocketListeners]);
+
   // Auto-scroll to bottom when messages change (only within chat container)
   useEffect(() => {
     if (messagesContainerRef.current) {
@@ -325,45 +346,36 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     }
   }, [messages]);
 
-  // Load messages when conversation is selected
-  useEffect(() => {
-    if (selectedConversation) {
-      const conversationMessages = getMessagesForConversation(selectedConversation.id);
-      setMessages(conversationMessages as Message[]);
-    }
-  }, [selectedConversation]);
+  // Remove old mock getMessagesForConversation
+  // Load messages handled by useChatStore
 
   // Auto-select conversation when initialConversationId, phone, or name changes
   useEffect(() => {
-    if ((initialConversationId || initialConversationPhone || initialConversationName) && expanded) {
+    if ((initialConversationId || initialConversationPhone || initialConversationName) && expanded && mappedConversations.length > 0) {
       // First try to find by ID
-      let conv = mockConversations.find(c => c.id === initialConversationId);
-      
+      let conv = mappedConversations.find(c => c.id === initialConversationId);
+
       // If not found by ID, try to match by phone number
       if (!conv && initialConversationPhone) {
-        conv = mockConversations.find(c => c.phone === initialConversationPhone);
+        conv = mappedConversations.find(c => c.phone.includes(initialConversationPhone!));
       }
-      
+
       // If still not found, try to match by name (exact match first, then partial)
       if (!conv && initialConversationName) {
-        conv = mockConversations.find(c => c.name.toLowerCase() === initialConversationName.toLowerCase());
+        conv = mappedConversations.find(c => c.name.toLowerCase() === initialConversationName.toLowerCase());
         if (!conv) {
-          conv = mockConversations.find(c => 
+          conv = mappedConversations.find(c =>
             c.name.toLowerCase().includes(initialConversationName.toLowerCase()) ||
             initialConversationName.toLowerCase().includes(c.name.toLowerCase())
           );
         }
       }
-      
+
       if (conv) {
-        setSelectedConversation(conv);
-        setIsConversationRead(false);
-        if (isMobile) {
-          setShowMobileChat(true);
-        }
+        handleSelectConversation(conv);
       }
     }
-  }, [initialConversationId, initialConversationPhone, initialConversationName, expanded, isMobile]);
+  }, [initialConversationId, initialConversationPhone, initialConversationName, expanded, isMobile, storeConversations.length]);
 
   // Reset panel when settings close
   useEffect(() => {
@@ -380,19 +392,19 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   };
 
   // Filter conversations based on search, status, tag filter and active tab
-  const filteredConversations = mockConversations.filter(conv => {
+  const filteredConversations = mappedConversations.filter(conv => {
     const matchesSearch = conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.phone.includes(searchQuery);
-    const matchesStatus = filterStatus === 'respondido' ? conv.isActive : 
-      filterStatus === 'nao_respondido' ? !conv.isActive : true;
+    const matchesStatus = filterStatus === 'respondido' ? conv.isActive :
+      filterStatus === 'nao_respondido' ? !conv.isActive : true; // In the future bind this to real status
     // Tag filter would match against conversation status/funnel stage in real implementation
-    const matchesTag = !selectedTagFilter || true; // Mock - all pass for now
-    
+    const matchesTag = !selectedTagFilter || true;
+
     // Filter by active tab (todos, funil or carteira)
-    const convIndex = mockConversations.indexOf(conv);
+    const convIndex = mappedConversations.indexOf(conv);
     const convType = getConversationType(convIndex);
     const matchesTab = activeConversationTab === 'todos' || activeConversationTab === convType;
-    
+
     return matchesSearch && matchesStatus && matchesTag && matchesTab;
   });
 
@@ -432,7 +444,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     setSelectedTagFilter(prev => prev === filterId ? null : filterId);
     setTagFilterOpen(false);
     setExpandedTagStatus(null);
-    
+
     // Find label for toast
     let label = '';
     if (subStatusId) {
@@ -442,7 +454,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     } else {
       label = allStatusOptions.find(s => s.id === tagId)?.label || tagId;
     }
-    
+
     if (selectedTagFilter !== filterId) {
       toast.success(`Filtrando por: ${label}`);
     }
@@ -452,7 +464,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     // Check if it's a main status
     const mainStatus = allStatusOptions.find(s => s.id === selectedTagFilter);
     if (mainStatus) return { label: mainStatus.label, color: mainStatus.color };
-    
+
     // Check if it's a substatus
     for (const status of allStatusOptions) {
       if (status.subStatuses) {
@@ -465,6 +477,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversation(conv);
+    setActiveConversation(conv.id);
     setIsConversationRead(false);
     if (isMobile) {
       setShowMobileChat(true);
@@ -472,18 +485,9 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedConversation) return;
 
-    const message: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender: 'agent',
-      agentName: 'Você',
-      timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      status: 'sent',
-    };
-
-    setMessages([...messages, message]);
+    storeSendMessage(selectedConversation.id, newMessage, 'text');
     setNewMessage('');
   };
 
@@ -497,6 +501,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   const handleBackToList = () => {
     setShowMobileChat(false);
     setSelectedConversation(null);
+    setActiveConversation(null);
     setShowSettings(false);
   };
 
@@ -521,15 +526,9 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     const file = e.target.files?.[0];
     if (file) {
       toast.success(`Anexo selecionado: ${file.name}`);
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        content: `📎 Anexo: ${file.name}`,
-        sender: 'agent',
-        agentName: 'Você',
-        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
-      };
-      setMessages(prev => [...prev, newMsg]);
+      if (selectedConversation) {
+        storeSendMessage(selectedConversation.id, `📎 Anexo: ${file.name}`, 'text');
+      }
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -548,28 +547,28 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      
+
       const chunks: BlobPart[] = [];
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunks.push(e.data);
         }
       };
-      
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         setAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
       };
-      
+
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
-      
+
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
-      
+
     } catch (error) {
       toast.error('Não foi possível acessar o microfone. Verifique as permissões.');
     }
@@ -579,7 +578,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current);
         recordingIntervalRef.current = null;
@@ -594,7 +593,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     setIsRecording(false);
     setAudioBlob(null);
     setRecordingTime(0);
-    
+
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
       recordingIntervalRef.current = null;
@@ -605,17 +604,11 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     if (audioBlob) {
       const duration = formatRecordingTime(recordingTime);
       toast.success(`Áudio enviado (${duration})`);
-      
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        content: `🎤 Áudio (${duration})`,
-        sender: 'agent',
-        agentName: 'Você',
-        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        status: 'sent',
-      };
-      setMessages(prev => [...prev, newMsg]);
-      
+
+      if (selectedConversation) {
+        storeSendMessage(selectedConversation.id, `🎤 Áudio (${duration})`, 'text');
+      }
+
       setAudioBlob(null);
       setRecordingTime(0);
     }
@@ -996,9 +989,9 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           </Select>
           <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
             <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
+              <Button
+                variant="outline"
+                size="icon"
                 className={cn(
                   "h-9 w-9 border-[#d1d7db] dark:border-[#3b4a54] text-[#54656f] dark:text-[#8696a0]",
                   selectedTagFilter && "bg-[#00a884]/10 border-[#00a884] text-[#00a884]"
@@ -1089,8 +1082,8 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               onClick={() => handleSelectConversation(conv)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-[#e9edef] dark:border-[#222d34]",
-                selectedConversation?.id === conv.id 
-                  ? "bg-[#f0f2f5] dark:bg-[#2a3942]" 
+                selectedConversation?.id === conv.id
+                  ? "bg-[#f0f2f5] dark:bg-[#2a3942]"
                   : "hover:bg-[#f5f6f6] dark:hover:bg-[#202c33]"
               )}
             >
@@ -1113,7 +1106,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="font-medium text-[#111b21] dark:text-[#e9edef] truncate text-[15px]">{conv.name}</span>
                   {conv.unreadCount > 0 && (
-                    <Badge 
+                    <Badge
                       className="ml-2 h-5 min-w-[20px] px-1.5 text-[11px] bg-[#25d366] text-white font-medium rounded-full border-0"
                     >
                       {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
@@ -1124,17 +1117,16 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#25d366]" />
                   <span className="text-[11px] text-[#667781] dark:text-[#8696a0]">
-                    {conv.status === 'ia' ? 'Atendimento automático (IA)' : 
-                     conv.status === 'manual' ? 'Atendimento manual' : 'Aguardando'}
+                    {conv.status === 'ia' ? 'Atendimento automático (IA)' :
+                      conv.status === 'manual' ? 'Atendimento manual' : 'Aguardando'}
                   </span>
-                  {/* Funil/Carteira indicator */}
                   <span className={cn(
                     "text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded",
-                    getConversationType(mockConversations.indexOf(conv)) === 'carteira' 
+                    getConversationType(mappedConversations.indexOf(conv)) === 'carteira'
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                       : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                   )}>
-                    {getConversationType(mockConversations.indexOf(conv)) === 'carteira' ? 'Carteira' : 'Funil'}
+                    {getConversationType(mappedConversations.indexOf(conv)) === 'carteira' ? 'Carteira' : 'Funil'}
                   </span>
                 </div>
               </div>
@@ -1209,8 +1201,8 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                           size="icon"
                           className={cn(
                             "h-8 w-8",
-                            selectedConversationLabels.length > 0 
-                              ? "text-[#F5A15D] hover:bg-[#F5A15D]/10" 
+                            selectedConversationLabels.length > 0
+                              ? "text-[#F5A15D] hover:bg-[#F5A15D]/10"
                               : "text-[#54656f] dark:text-[#aebac1] hover:bg-[#f0f2f5] dark:hover:bg-[#2a3942]"
                           )}
                         >
@@ -1244,9 +1236,9 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                               selectedConversationLabels.includes(label.id) && "bg-primary/10"
                             )}
                           >
-                            <div 
-                              className="w-3 h-3 rounded-full shrink-0" 
-                              style={{ backgroundColor: label.color }} 
+                            <div
+                              className="w-3 h-3 rounded-full shrink-0"
+                              style={{ backgroundColor: label.color }}
                             />
                             <span className="flex-1">{label.name}</span>
                             {selectedConversationLabels.includes(label.id) && (
@@ -1360,7 +1352,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           </div>
 
           {/* Messages area - WhatsApp background pattern */}
-          <div 
+          <div
             ref={messagesContainerRef}
             className="flex-1 p-3 overflow-y-auto min-h-0"
             style={{
@@ -1433,7 +1425,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           {/* Input area - WhatsApp style */}
           <div className="px-4 py-2.5 bg-[#f0f2f5] dark:bg-[#202c33]">
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} />
-            
+
             {isRecording || audioBlob ? (
               <div className="flex items-center gap-2">
                 {isRecording ? (
@@ -1459,7 +1451,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                     >
                       <Send className="w-5 h-5 text-white" />
                     </Button>
-                </>
+                  </>
                 ) : audioBlob ? (
                   <>
                     <Button
@@ -1566,7 +1558,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
             <h3 className="text-sm font-semibold text-white">Central de Conversas</h3>
             <Wifi className="w-3.5 h-3.5 text-white/80" />
           </div>
-          
+
           {/* Mobile: Collapse arrow only */}
           <button
             onClick={onToggle}
@@ -1574,7 +1566,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           >
             <ChevronUp className="w-5 h-5" />
           </button>
-          
+
           {/* Tab buttons: TODOS, FUNIL, CARTEIRA - filters */}
           <div className="flex items-center gap-1 sm:gap-1.5">
             <button
@@ -1611,7 +1603,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               Carteira
             </button>
           </div>
-          
+
           {/* Desktop: Collapse button with text */}
           <Button
             variant="ghost"
@@ -1643,17 +1635,17 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
 
       {/* Settings Sheet */}
       <Sheet open={showSettings} onOpenChange={setShowSettings}>
-        <SheetContent 
-          side={isMobile ? "bottom" : "right"} 
+        <SheetContent
+          side={isMobile ? "bottom" : "right"}
           className={cn("p-0 z-[70] bg-background", isMobile ? "rounded-t-2xl max-h-[85vh]" : "w-80 sm:w-96")}
         >
           <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/30">
             <SheetTitle className="text-base font-semibold">
-              {activePanel === 'main' ? 'Configurações' : 
-               activePanel === 'notes' ? 'Observações' :
-               activePanel === 'schedule' ? 'Agendar Retorno' :
-               activePanel === 'transfer' ? 'Transferir Atendimento' :
-               activePanel === 'temperature' ? 'Temperatura' : 'Configurações'}
+              {activePanel === 'main' ? 'Configurações' :
+                activePanel === 'notes' ? 'Observações' :
+                  activePanel === 'schedule' ? 'Agendar Retorno' :
+                    activePanel === 'transfer' ? 'Transferir Atendimento' :
+                      activePanel === 'temperature' ? 'Temperatura' : 'Configurações'}
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 overflow-auto" style={{ maxHeight: isMobile ? 'calc(85vh - 60px)' : 'calc(100vh - 60px)' }}>
@@ -1703,8 +1695,8 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               </div>
             </div>
             <div className="flex-1 overflow-auto min-h-0">
-              <SellerCalendarView 
-                onOpenChat={() => {}}
+              <SellerCalendarView
+                onOpenChat={() => { }}
                 onEditSchedule={(schedule) => setEditingSchedule(schedule)}
                 onCreateSchedule={(date, time) => setNewScheduleData({ date, time })}
               />
@@ -2055,8 +2047,8 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
               <Label className="text-sm font-medium">
                 Canal de Origem <span className="text-destructive">*</span>
               </Label>
-              <Select 
-                value={newLead.origin} 
+              <Select
+                value={newLead.origin}
                 onValueChange={(value) => {
                   setNewLead(prev => ({ ...prev, origin: value }));
                   if (newLeadErrors.origin) setNewLeadErrors(prev => ({ ...prev, origin: '' }));
