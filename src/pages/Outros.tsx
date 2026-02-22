@@ -2026,17 +2026,15 @@ TOOLS DISPONÍVEIS:
 
       try {
         const response = await whatsappApi.connect(connectionId);
-        // Backend returns the uazapi response directly or processed
-        // Uazapi usually returns { qrcode: "data:image/png;base64,..." } or just base64 string
         const code = response.data.base64 || response.data.qrcode || response.data.qrCode;
 
         if (code) {
           setQrCodeData(code);
         } else {
           // If connected, it might not return QR code
-          if (response.data.instance?.status === 'connected') {
+          if (response.data.instance?.status === 'connected' || response.data.status === 'connected') {
             toast({ title: 'Já conectado', description: 'Esta instância já está conectada.' });
-            handleConfirmConnection(connectionId); // Update local state
+            handleConfirmConnection(connectionId);
           }
         }
       } catch (error) {
@@ -2048,6 +2046,45 @@ TOOLS DISPONÍVEIS:
         });
       }
     };
+
+    // Auto-poll connection status while QR code is showing
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useEffect(() => {
+      if (!showQrCodeForConnection) return;
+
+      const pollInterval = setInterval(async () => {
+        try {
+          const response = await whatsappApi.getAll();
+          const connections = response.data;
+          const current = connections.find((c: any) => c.id === showQrCodeForConnection);
+
+          if (current && current.status === 'connected') {
+            clearInterval(pollInterval);
+            setShowQrCodeForConnection(null);
+            setQrCodeData(null);
+
+            // Update local state
+            const mapped = connections.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              phone: c.phoneNumber,
+              status: c.status === 'connected' ? 'connected' : 'disconnected',
+              connectedAt: c.createdAt
+            }));
+            setWhatsappConnections(mapped);
+
+            toast({
+              title: 'WhatsApp conectado!',
+              description: 'A caixa de entrada foi vinculada com sucesso.',
+            });
+          }
+        } catch (error) {
+          // Silently fail polling
+        }
+      }, 5000); // Check every 5 seconds
+
+      return () => clearInterval(pollInterval);
+    }, [showQrCodeForConnection]);
 
     return (
       <div className="min-h-screen bg-background pb-[var(--safe-area-bottom)]">
