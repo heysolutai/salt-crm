@@ -126,10 +126,11 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
             include: { lead: true },
         });
 
-        if (conversation && message.chatLid && conversation.contactLid !== message.chatLid) {
+        // Fix type for contactLid by casting
+        if (conversation && message.chatLid && (conversation as any).contactLid !== message.chatLid) {
             await prisma.conversation.update({
                 where: { id: conversation.id },
-                data: { contactLid: message.chatLid }
+                data: { contactLid: message.chatLid } as any
             });
         }
 
@@ -170,10 +171,9 @@ router.post('/uazapi/webhook', async (req: Request, res: Response) => {
                     leadId: lead.id,
                     whatsappConnectionId: connection.id,
                     contactPhone: message.phone,
-                    // @ts-ignore - Prisma client needs regeneration
                     contactLid: message.chatLid || null,
                     status: 'ai_handling',
-                },
+                } as any,
                 include: { lead: true },
             });
 

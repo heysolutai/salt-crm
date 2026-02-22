@@ -162,7 +162,7 @@ export class SocketService {
 
     // Message status updated
     emitMessageStatus(conversationId: string, messageId: string, status: string) {
-        this.emitToConversation(conversationId, 'message:status', { messageId, status });
+        this.emitToConversation(conversationId, 'message:status', { conversationId, messageId, status });
     }
 
     // New conversation created
