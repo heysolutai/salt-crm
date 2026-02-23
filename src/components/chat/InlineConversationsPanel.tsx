@@ -1437,10 +1437,16 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                           boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
                         }}
                       >
-                        {msg.contentType === 'audio' && msg.mediaUrl ? (
-                          <div className="mb-1 w-[250px]">
-                            <audio src={msg.mediaUrl} controls className="h-10 w-full" />
-                          </div>
+                        {msg.contentType === 'audio' ? (
+                          msg.mediaUrl ? (
+                            <div className="mb-1 w-[250px]">
+                              <audio src={msg.mediaUrl} controls className="h-10 w-full" />
+                            </div>
+                          ) : (
+                            <div className="mb-1 w-[250px] px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">
+                              [!] Áudio recebido, mas URL da mídia não foi capturada pelo backend.
+                            </div>
+                          )
                         ) : msg.contentType === 'image' && msg.mediaUrl ? (
                           <div className="mb-1">
                             <img src={msg.mediaUrl} alt="Imagem enviada" className="max-w-[250px] rounded-md" />
