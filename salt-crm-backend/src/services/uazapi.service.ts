@@ -309,13 +309,14 @@ export class UAZAPIService {
                 typeStr = keys.find(k => k.toLowerCase().includes('message')) || keys[0];
             }
 
-            if (typeStr?.includes('image')) contentType = 'image';
-            else if (typeStr?.includes('video')) contentType = 'video';
-            else if (typeStr?.includes('audio') || typeStr === 'ptt') contentType = 'audio';
-            else if (typeStr?.includes('document')) contentType = 'document';
-            else if (typeStr?.includes('sticker')) contentType = 'sticker';
-            else if (typeStr?.includes('location')) contentType = 'location';
-            else if (typeStr?.includes('contact')) contentType = 'contact';
+            const lowerType = typeStr?.toLowerCase();
+            if (lowerType?.includes('image')) contentType = 'image';
+            else if (lowerType?.includes('video')) contentType = 'video';
+            else if (lowerType?.includes('audio') || lowerType === 'ptt') contentType = 'audio';
+            else if (lowerType?.includes('document')) contentType = 'document';
+            else if (lowerType?.includes('sticker')) contentType = 'sticker';
+            else if (lowerType?.includes('location')) contentType = 'location';
+            else if (lowerType?.includes('contact')) contentType = 'contact';
 
             logger.info(`Webhook message parsed - ID: ${message.key?.id || message.messageid || message.id}, TypeStr detected: ${typeStr}, Final contentType: ${contentType}`);
 
