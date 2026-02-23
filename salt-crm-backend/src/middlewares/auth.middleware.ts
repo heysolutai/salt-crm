@@ -29,7 +29,7 @@ export async function authMiddleware(
             throw new UnauthorizedError('Token de refresh não pode ser usado para autenticação');
         }
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { id: decoded.sub },
             select: {
                 id: true,
@@ -43,7 +43,39 @@ export async function authMiddleware(
         });
 
         if (!user) {
-            throw new UnauthorizedError('Usuário não encontrado');
+            // Fallback: check if it's a SuperAdmin
+            const admin = await prisma.superAdminUser.findUnique({
+                where: { id: decoded.sub },
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    role: true,
+                    isActive: true,
+                },
+            });
+
+            if (!admin) {
+                throw new UnauthorizedError('Usuário não encontrado');
+            }
+
+            if (!admin.isActive) {
+                throw new UnauthorizedError('Usuário desativado');
+            }
+
+            // Build a compatible user object for SuperAdmin
+            req.user = {
+                id: admin.id,
+                email: admin.email,
+                name: admin.name,
+                role: admin.role as string,
+                tenantId: 'master-tenant',
+                teamId: null,
+                isActive: admin.isActive,
+            } as unknown as AuthUser;
+            req.tenantId = 'master-tenant';
+
+            return next();
         }
 
         if (!user.isActive) {
