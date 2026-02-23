@@ -155,8 +155,8 @@ export class UAZAPIService {
                 }),
             });
 
-            if (result && (result.url || result.link || result.base64)) {
-                const url = result.url || result.link || result.base64;
+            if (result && (result.fileURL || result.url || result.link || result.base64)) {
+                const url = result.fileURL || result.url || result.link || result.base64;
                 logger.info(`Successfully got media link for message ${messageId}: ${url}`);
                 return url;
             } else if (typeof result === 'string') {
