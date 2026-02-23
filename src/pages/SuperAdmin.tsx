@@ -2613,12 +2613,12 @@ const SuperAdmin: React.FC = () => {
         email: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
         phone: '', // Not in UI
         planId: data.planId,
-        monthlyValue: data.monthlyValue,
-        usersLimit: data.userCount,
+        monthlyValue: Number(data.monthlyValue),
+        usersLimit: Number(data.userCount),
         segment: data.nicheId,
-        adminName: data.admin?.name,
-        adminEmail: data.admin?.email,
-        adminPassword: data.admin?.password,
+        adminName: data.admin?.name || 'Admin',
+        adminEmail: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
+        adminPassword: data.admin?.password || 'salt@123',
       };
 
       const res = await api.post('/superadmin/tenants', payload);
@@ -2626,8 +2626,30 @@ const SuperAdmin: React.FC = () => {
       toast.success(`Empresa "${data.name}" criada com sucesso!`);
       setShowNewTenantModal(false);
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.response?.data?.message || 'Erro ao criar empresa');
+      console.error('Payload enviado:', {
+        name: data.name,
+        email: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
+        phone: '',
+        planId: data.planId,
+        monthlyValue: Number(data.monthlyValue),
+        usersLimit: Number(data.userCount),
+        segment: data.nicheId,
+        adminName: data.admin?.name || 'Admin',
+        adminEmail: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
+        adminPassword: data.admin?.password || 'salt@123',
+      });
+      console.error('Erro backend detalhado:', error.response?.data);
+
+      const errorMessage = error.response?.data?.error?.message
+        || error.response?.data?.message
+        || 'Erro ao criar empresa';
+
+      const errorDetails = error.response?.data?.error?.details;
+      if (errorDetails) {
+        toast.error(`${errorMessage}: ${JSON.stringify(errorDetails)}`);
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
