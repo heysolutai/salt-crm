@@ -278,6 +278,40 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
             });
         }
 
+        // ============================================
+        // AI AGENT EXTERNAL WEBHOOK DISPATCH
+        // ============================================
+        if (!message.fromMe && message.content) {
+            try {
+                // Find active AI Agents for this tenant with a configured webhook
+                const activeAgents = await prisma.aiAgent.findMany({
+                    where: { tenantId, isActive: true, webhookUrl: { not: null } }
+                });
+
+                for (const agent of activeAgents) {
+                    if (agent.webhookUrl) {
+                        const payload = {
+                            session: connection.name || message.instanceId,
+                            text: message.content,
+                            number: message.phone,
+                            agentName: agent.name
+                        };
+
+                        // Fire and forget fetch request
+                        fetch(agent.webhookUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        }).catch(reqErr => {
+                            logger.error(`[AI Agent Webhook] Failed to send payload to ${agent.name} at ${agent.webhookUrl}: ${reqErr.message}`);
+                        });
+                    }
+                }
+            } catch (err) {
+                logger.error('[AI Agent Webhook] Error fetching agents or dispatching', err);
+            }
+        }
+
         res.status(200).json({ success: true, message: 'Message processed' });
     } catch (error: any) {
         logger.error('Webhook processing error:', error);

@@ -1,0 +1,1 @@
+﻿src/modules/agents/agents.routes.ts(3,30): error TS2307: Cannot find module '../../middleware/auth.js' or its corresponding type declarations.

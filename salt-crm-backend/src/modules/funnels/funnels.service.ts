@@ -30,6 +30,13 @@ export class FunnelsService {
                         isEntry: true,
                         isExit: true,
                         exitType: true,
+                        leads: {
+                            orderBy: { createdAt: 'desc' },
+                            include: {
+                                origin: { select: { id: true, name: true, type: true, color: true } },
+                                assignedTo: { select: { id: true, name: true, avatarUrl: true } }
+                            }
+                        }
                     },
                 },
                 _count: {
@@ -52,6 +59,15 @@ export class FunnelsService {
             include: {
                 stages: {
                     orderBy: { orderIndex: 'asc' },
+                    include: {
+                        leads: {
+                            orderBy: { createdAt: 'desc' },
+                            include: {
+                                origin: { select: { id: true, name: true, type: true, color: true } },
+                                assignedTo: { select: { id: true, name: true, avatarUrl: true } }
+                            }
+                        }
+                    }
                 },
                 _count: {
                     select: { leads: true },

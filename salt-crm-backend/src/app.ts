@@ -11,6 +11,7 @@ import { conversationsRoutes } from './modules/conversations/conversations.route
 import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { webhookRoutes } from './modules/webhooks/webhook.routes.js';
 import { uploadRoutes } from './modules/upload/upload.routes.js';
+import { agentsRouter } from './modules/agents/agents.routes.js';
 import { logger } from './utils/logger.js';
 
 const app = express();
@@ -77,6 +78,7 @@ apiRouter.use('/funnels', funnelsRoutes);
 apiRouter.use('/leads', leadsRoutes);
 apiRouter.use('/conversations', conversationsRoutes);
 apiRouter.use('/whatsapp', whatsappRoutes);
+apiRouter.use('/agents', agentsRouter);
 
 app.use('/api/v1', apiRouter);
 

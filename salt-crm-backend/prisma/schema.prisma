@@ -385,6 +385,7 @@ model Tenant {
   automationLogs      AutomationLog[]
   slaMetrics          SlaMetric[]
   dashboardMetrics    DashboardMetricDaily[]
+  aiAgents            AiAgent[]
   settings            TenantSettings?
   onboarding          TenantOnboarding?
   notifications       Notification[]
@@ -1432,4 +1433,26 @@ model CriticalAlert {
   @@index([status])
   @@index([tenantId])
   @@map("critical_alerts")
+}
+
+// ============================================================
+// AGENTES DE IA (NPS, SDR, POS-VENDA, FOLLOW-UP, LIGAÇÃO)
+// ============================================================
+
+model AiAgent {
+  id         String   @id @default(uuid())
+  tenantId   String   @map("tenant_id")
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name       String   // SDRIA, NPSIA, etc
+  isActive   Boolean  @default(true) @map("is_active")
+  webhookUrl String?  @map("webhook_url")
+  
+  config     Json?    // Guarda configuração adicional da UI
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@map("ai_agents")
 }

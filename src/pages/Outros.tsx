@@ -20,7 +20,7 @@ import { mockAIPrompts, mockFollowUpMessages, mockManagers, mockTeams, mockAgent
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile, useCompanySettings } from '@/hooks/useUserProfile';
 import { createSupportTicketFromForm, createServiceRequestTicket, createIALigacaoTicket, createWebhookIntegrationTicket, createUpgradeRequestTicket, supportTicketsApi } from '@/stores/support';
-import { whatsappApi } from '@/lib/api';
+import { whatsappApi, api } from '@/lib/api';
 import { useLabelsStore, Label as LabelType } from '@/stores/labels';
 import {
   Bot,
@@ -92,7 +92,8 @@ const Outros: React.FC = () => {
     navigate('/home', { replace: true });
   }, [navigate]);
 
-  // IA SDR configurable variables
+  const [sdrAgentId, setSdrAgentId] = useState<string | null>(null);
+  const [followUpAgentId, setFollowUpAgentId] = useState<string | null>(null);
   const [sdrConfig, setSdrConfig] = useState({
     nomeDoAgente: '',
     nomeDaEmpresa: '',
@@ -119,7 +120,7 @@ const Outros: React.FC = () => {
   const [editQuestionPlaceholder, setEditQuestionPlaceholder] = useState('');
   const [editQuestionDescription, setEditQuestionDescription] = useState('');
 
-  // IA Pós-Venda configurable variables
+  const [posVendaAgentId, setPosVendaAgentId] = useState<string | null>(null);
   const [posVendaConfig, setPosVendaConfig] = useState({
     nomeDoAgente: '',
     nomeDaEmpresa: '',
@@ -138,7 +139,7 @@ const Outros: React.FC = () => {
   const [posVendaThreshold, setPosVendaThreshold] = useState<3 | 4 | 5 | 6>(3);
   const [editingPosVendaQuestion, setEditingPosVendaQuestion] = useState<string | null>(null);
 
-  // IA NPS configurable variables
+  const [npsAgentId, setNpsAgentId] = useState<string | null>(null);
   const [npsConfig, setNpsConfig] = useState({
     nomeDoAgente: '',
     nomeDaEmpresa: '',
@@ -218,6 +219,38 @@ const Outros: React.FC = () => {
           });
         })
         .finally(() => setIsLoadingConnections(false));
+    } else if (['ia-sdr', 'ia-posvenda', 'ia-nps', 'ia-followup'].includes(activeSection || '')) {
+      // Load configuration for the selected Agent
+      api.get('/agents')
+        .then(res => {
+          const agents = Array.isArray(res.data) ? res.data : [];
+          agents.forEach((agent: any) => {
+            if (agent.name === 'SDR') {
+              setSdrAgentId(agent.id);
+              if (agent.config?.sdrConfig) setSdrConfig(agent.config.sdrConfig);
+              if (agent.config?.sdrQuestions) setSdrQuestions(agent.config.sdrQuestions);
+              if (agent.config?.qualificationThreshold) setQualificationThreshold(agent.config.qualificationThreshold);
+            } else if (agent.name === 'POS_VENDA') {
+              setPosVendaAgentId(agent.id);
+              if (agent.config?.posVendaConfig) setPosVendaConfig(agent.config.posVendaConfig);
+              if (agent.config?.posVendaQuestions) setPosVendaQuestions(agent.config.posVendaQuestions);
+              if (agent.config?.posVendaThreshold) setPosVendaThreshold(agent.config.posVendaThreshold);
+            } else if (agent.name === 'NPS') {
+              setNpsAgentId(agent.id);
+              if (agent.config?.npsConfig) setNpsConfig(agent.config.npsConfig);
+              if (agent.config?.npsBaseQuestion) {
+                // The base question config can be handled here if needed in future
+              }
+              if (agent.config?.npsDetractorQuestions) setNpsDetractorQuestions(agent.config.npsDetractorQuestions);
+              if (agent.config?.npsNeutralQuestions) setNpsNeutralQuestions(agent.config.npsNeutralQuestions);
+              if (agent.config?.npsPromoterQuestions) setNpsPromoterQuestions(agent.config.npsPromoterQuestions);
+            } else if (agent.name === 'FOLLOW_UP') {
+              setFollowUpAgentId(agent.id);
+              if (agent.config?.followUpMessages) setFollowUpMessages(agent.config.followUpMessages);
+            }
+          });
+        })
+        .catch(err => console.error('Error fetching agents config', err));
     }
   }, [activeSection]);
 
@@ -344,12 +377,66 @@ const Outros: React.FC = () => {
   // Pós-venda config - janela máxima de atuação
   const [posVendaMaxDays, setPosVendaMaxDays] = useState(365);
 
-  const handleSaveSdrConfig = () => {
-    console.log('Saving SDR config:', sdrConfig);
-    toast({
-      title: 'Configurações salvas',
-      description: 'As variáveis do agente IA SDR foram atualizadas.',
-    });
+  const handleSaveFollowUpConfig = async () => {
+    try {
+      const payload = {
+        name: 'FOLLOW_UP',
+        isActive: true,
+        config: {
+          followUpMessages
+        }
+      };
+
+      if (followUpAgentId) {
+        await api.put(`/agents/${followUpAgentId}`, payload);
+      } else {
+        const res = await api.post('/agents', payload);
+        if (res.data?.id) setFollowUpAgentId(res.data.id);
+      }
+
+      toast({
+        title: 'Configurações salvas',
+        description: 'Todas as mensagens de follow-up foram atualizadas.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o Follow-up.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleSaveSdrConfig = async () => {
+    try {
+      const payload = {
+        name: 'SDR',
+        isActive: true,
+        config: {
+          sdrConfig,
+          sdrQuestions,
+          qualificationThreshold
+        }
+      };
+
+      if (sdrAgentId) {
+        await api.put(`/agents/${sdrAgentId}`, payload);
+      } else {
+        const res = await api.post('/agents', payload);
+        if (res.data?.id) setSdrAgentId(res.data.id);
+      }
+
+      toast({
+        title: 'Configurações salvas',
+        description: 'As variáveis do agente IA SDR foram atualizadas.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o IA SDR.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -794,18 +881,70 @@ TOOLS DISPONÍVEIS:
     }
   };
 
-  const handleSavePosVendaConfig = () => {
-    toast({
-      title: 'Configurações salvas',
-      description: 'As configurações do agente Pós-venda foram atualizadas.',
-    });
+  const handleSavePosVendaConfig = async () => {
+    try {
+      const payload = {
+        name: 'POS_VENDA',
+        isActive: true,
+        config: {
+          posVendaConfig,
+          posVendaQuestions,
+          posVendaThreshold
+        }
+      };
+
+      if (posVendaAgentId) {
+        await api.put(`/agents/${posVendaAgentId}`, payload);
+      } else {
+        const res = await api.post('/agents', payload);
+        if (res.data?.id) setPosVendaAgentId(res.data.id);
+      }
+
+      toast({
+        title: 'Configurações salvas',
+        description: 'As configurações do agente Pós-venda foram atualizadas.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o Agente.',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const handleSaveNpsConfig = () => {
-    toast({
-      title: 'Configurações salvas',
-      description: 'As configurações do agente NPS foram atualizadas.',
-    });
+  const handleSaveNpsConfig = async () => {
+    try {
+      const payload = {
+        name: 'NPS',
+        isActive: true,
+        config: {
+          npsConfig,
+          npsBaseQuestion,
+          npsDetractorQuestions,
+          npsNeutralQuestions,
+          npsPromoterQuestions
+        }
+      };
+
+      if (npsAgentId) {
+        await api.put(`/agents/${npsAgentId}`, payload);
+      } else {
+        const res = await api.post('/agents', payload);
+        if (res.data?.id) setNpsAgentId(res.data.id);
+      }
+
+      toast({
+        title: 'Configurações salvas',
+        description: 'As configurações do agente NPS foram atualizadas.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o NPS.',
+        variant: 'destructive'
+      });
+    }
   };
 
   if (activeSection === 'ia-sdr') {
@@ -1188,12 +1327,7 @@ TOOLS DISPONÍVEIS:
 
           <Button
             className="w-full h-10 text-[13px] gap-2"
-            onClick={() => {
-              toast({
-                title: 'Configurações salvas',
-                description: 'Todas as mensagens de follow-up foram atualizadas.',
-              });
-            }}
+            onClick={handleSaveFollowUpConfig}
           >
             <Save className="w-4 h-4" />
             Salvar Todas as Configurações
