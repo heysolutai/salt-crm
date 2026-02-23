@@ -34,6 +34,7 @@ interface WebhookMessage {
     chatLid?: string;
     fromMe?: boolean;
     rawMessage?: any;
+    avatarUrl?: string;
 }
 
 export class UAZAPIService {
@@ -127,12 +128,20 @@ export class UAZAPIService {
     }
 
     // Fetch base64 from a media message
-    async getBase64MediaFromWebhookMessage(instanceId: string, message: any): Promise<string | null> {
+    async getBase64MediaFromWebhookMessage(instanceName: string, messageId: string): Promise<string | null> {
         try {
-            const result = await this.request<{ base64: string }>(`/chat/getBase64FromMediaMessage/${instanceId}`, {
+            const result = await this.request<any>(`/message/download`, {
                 method: 'POST',
+                headers: {
+                    'apikey': this.config.apiKey // Some Uazapi roots expect 'apikey' over Bearer in this route
+                },
                 body: JSON.stringify({
-                    message
+                    id: messageId,
+                    return_base64: true,
+                    generate_mp3: true,
+                    return_link: false,
+                    transcribe: false,
+                    download_quoted: false
                 }),
             });
 
@@ -141,7 +150,7 @@ export class UAZAPIService {
             }
             return null;
         } catch (error) {
-            logger.error(`Failed to get base64 media for message ${message?.key?.id}:`, error);
+            logger.error(`Failed to get base64 media for message ${messageId}:`, error);
             return null;
         }
     }
@@ -307,6 +316,7 @@ export class UAZAPIService {
                 isGroup,
                 senderName: message.pushName || message.senderName || chat?.wa_name || chat?.name || chat?.wa_contactName,
                 contactName: chat?.name || chat?.wa_name || chat?.wa_contactName,
+                avatarUrl: chat?.imagePreview || chat?.image,
                 chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid,
                 fromMe,
                 rawMessage: message

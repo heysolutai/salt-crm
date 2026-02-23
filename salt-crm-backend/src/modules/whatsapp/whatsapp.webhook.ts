@@ -188,6 +188,7 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
                         stageId: defaultStage.id,
                         name: (!message.fromMe && message.senderName) ? message.senderName : (message.contactName || message.phone),
                         phone: message.phone,
+                        avatarUrl: message.avatarUrl || null,
                     },
                 });
             }
