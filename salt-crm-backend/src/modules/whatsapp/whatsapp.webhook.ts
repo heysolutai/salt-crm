@@ -211,6 +211,17 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
             }
         }
 
+        // Always update the lead's avatar if the latest payload provides a new one
+        if (message.avatarUrl && (conversation as any).lead) {
+            const currentLead = (conversation as any).lead;
+            if (currentLead.avatarUrl !== message.avatarUrl) {
+                await prisma.lead.update({
+                    where: { id: currentLead.id },
+                    data: { avatarUrl: message.avatarUrl }
+                });
+            }
+        }
+
         // Check for duplicate messages
         const existingMessage = await prisma.message.findFirst({
             where: { externalId: message.messageId },
