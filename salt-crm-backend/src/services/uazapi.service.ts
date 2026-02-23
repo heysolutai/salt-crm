@@ -231,7 +231,37 @@ export class UAZAPIService {
             else if (typeStr?.includes('contact')) contentType = 'contact';
 
             // Extract media URL if present - UAZAPI might put it in message.url or we might need to fetch it
-            if (message.url) {
+            let base64Data = message.base64 || message.message?.base64;
+
+            if (base64Data) {
+                try {
+                    const fs = require('fs');
+                    const path = require('path');
+
+                    let ext = '.bin';
+                    if (contentType === 'audio') ext = '.ogg';
+                    else if (contentType === 'video') ext = '.mp4';
+                    else if (contentType === 'image') ext = '.jpg';
+                    else if (contentType === 'document') ext = '.pdf';
+
+                    const filename = `inbound-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+                    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+
+                    if (!fs.existsSync(uploadDir)) {
+                        fs.mkdirSync(uploadDir, { recursive: true });
+                    }
+
+                    if (base64Data.includes('base64,')) {
+                        base64Data = base64Data.split('base64,')[1];
+                    }
+
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    fs.writeFileSync(path.join(uploadDir, filename), buffer);
+                    mediaUrl = `${env.API_URL}/uploads/${filename}`;
+                } catch (e) {
+                    logger.error('Failed to save webhook base64 media', e);
+                }
+            } else if (message.url) {
                 mediaUrl = message.url;
             } else if (message.mediaUrl) {
                 mediaUrl = message.mediaUrl;
