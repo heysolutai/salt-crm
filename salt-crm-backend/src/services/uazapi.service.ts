@@ -138,6 +138,7 @@ export class UAZAPIService {
     // Fetch base64 from a media message
     async getBase64MediaFromWebhookMessage(instanceName: string, instanceToken: string, messageId: string): Promise<string | null> {
         try {
+            logger.info(`Attempting to download media for message ${messageId} on instance ${instanceName}`);
             const result = await this.request<any>(`/message/download`, {
                 method: 'POST',
                 headers: {
@@ -155,7 +156,13 @@ export class UAZAPIService {
             });
 
             if (result && result.base64) {
+                logger.info(`Successfully downloaded and converted base64 media for message ${messageId}`);
                 return result.base64;
+            } else if (typeof result === 'string') {
+                logger.info(`Evolution API returned base64 string directly for message ${messageId}`);
+                return result;
+            } else {
+                logger.warn(`Evolution API returned empty base64 for message ${messageId}: ${JSON.stringify(result)}`);
             }
             return null;
         } catch (error) {
@@ -296,14 +303,21 @@ export class UAZAPIService {
             let mediaUrl: string | undefined;
 
             // Map UAZAPI/Evolution types to ours
-            const typeStr = message.messageType || message.type || Object.keys(msgObj)[0];
+            let typeStr = message.messageType || message.type;
+            if (!typeStr && msgObj && typeof msgObj === 'object') {
+                const keys = Object.keys(msgObj);
+                typeStr = keys.find(k => k.toLowerCase().includes('message')) || keys[0];
+            }
+
             if (typeStr?.includes('image')) contentType = 'image';
             else if (typeStr?.includes('video')) contentType = 'video';
-            else if (typeStr?.includes('audio')) contentType = 'audio';
+            else if (typeStr?.includes('audio') || typeStr === 'ptt') contentType = 'audio';
             else if (typeStr?.includes('document')) contentType = 'document';
             else if (typeStr?.includes('sticker')) contentType = 'sticker';
             else if (typeStr?.includes('location')) contentType = 'location';
             else if (typeStr?.includes('contact')) contentType = 'contact';
+
+            logger.info(`Webhook message parsed - ID: ${message.key?.id || message.messageid || message.id}, TypeStr detected: ${typeStr}, Final contentType: ${contentType}`);
 
             // Extract media URL if present - UAZAPI might put it in message.url or we might need to fetch it
             let base64Data = message.base64 || message.message?.base64;
