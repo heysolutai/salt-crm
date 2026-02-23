@@ -124,6 +124,30 @@ export class UAZAPIService {
         }
     }
 
+    // Fetch base64 from a media message id
+    async getBase64MediaFromWebhookMessage(instanceId: string, messageId: string): Promise<string | null> {
+        try {
+            const result = await this.request<{ base64: string }>(`/chat/getBase64FromMediaMessage/${instanceId}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    message: {
+                        key: {
+                            id: messageId
+                        }
+                    }
+                }),
+            });
+
+            if (result && result.base64) {
+                return result.base64;
+            }
+            return null;
+        } catch (error) {
+            logger.error(`Failed to get base64 media for message ${messageId}:`, error);
+            return null;
+        }
+    }
+
     // Send Presence Update
     async sendPresence(instanceId: string, phone: string, isTyping: boolean): Promise<boolean> {
         try {
@@ -168,6 +192,38 @@ export class UAZAPIService {
             return { instanceId: result.instance };
         } catch (error) {
             logger.error('Failed to create instance:', error);
+            return null;
+        }
+    }
+
+    // Save base64 string to local file
+    saveBase64MediaLocally(base64Data: string, contentType: string): string | null {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+
+            let ext = '.bin';
+            if (contentType === 'audio') ext = '.ogg';
+            else if (contentType === 'video') ext = '.mp4';
+            else if (contentType === 'image') ext = '.jpg';
+            else if (contentType === 'document') ext = '.pdf';
+
+            const filename = `inbound-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+            const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+
+            if (base64Data.includes('base64,')) {
+                base64Data = base64Data.split('base64,')[1];
+            }
+
+            const buffer = Buffer.from(base64Data, 'base64');
+            fs.writeFileSync(path.join(uploadDir, filename), buffer);
+            return `${env.API_URL}/uploads/${filename}`;
+        } catch (e) {
+            logger.error('Failed to save webhook base64 media', e);
             return null;
         }
     }
@@ -234,33 +290,8 @@ export class UAZAPIService {
             let base64Data = message.base64 || message.message?.base64;
 
             if (base64Data) {
-                try {
-                    const fs = require('fs');
-                    const path = require('path');
-
-                    let ext = '.bin';
-                    if (contentType === 'audio') ext = '.ogg';
-                    else if (contentType === 'video') ext = '.mp4';
-                    else if (contentType === 'image') ext = '.jpg';
-                    else if (contentType === 'document') ext = '.pdf';
-
-                    const filename = `inbound-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-                    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-                    if (!fs.existsSync(uploadDir)) {
-                        fs.mkdirSync(uploadDir, { recursive: true });
-                    }
-
-                    if (base64Data.includes('base64,')) {
-                        base64Data = base64Data.split('base64,')[1];
-                    }
-
-                    const buffer = Buffer.from(base64Data, 'base64');
-                    fs.writeFileSync(path.join(uploadDir, filename), buffer);
-                    mediaUrl = `${env.API_URL}/uploads/${filename}`;
-                } catch (e) {
-                    logger.error('Failed to save webhook base64 media', e);
-                }
+                const url = this.saveBase64MediaLocally(base64Data, contentType);
+                if (url) mediaUrl = url;
             } else if (message.url) {
                 mediaUrl = message.url;
             } else if (message.mediaUrl) {
