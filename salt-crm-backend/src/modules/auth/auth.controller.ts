@@ -14,6 +14,17 @@ export class AuthController {
         }
     }
 
+    async superAdminLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const data = req.body as LoginInput;
+            const result = await authService.superAdminLogin(data);
+
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { refresh_token } = req.body as RefreshInput;

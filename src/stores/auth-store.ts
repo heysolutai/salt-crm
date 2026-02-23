@@ -41,7 +41,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isLoading: true, error: null });
 
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            let data;
+
+            // Try SuperAdmin login first if it looks like the admin email
+            if (email === 'admin@saltdigital.com.br') {
+                try {
+                    const res = await api.post('/auth/superadmin/login', { email, password });
+                    data = res.data;
+                } catch (e) {
+                    // Fallback to normal login just in case
+                    const res = await api.post('/auth/login', { email, password });
+                    data = res.data;
+                }
+            } else {
+                // Normal login
+                const res = await api.post('/auth/login', { email, password });
+                data = res.data;
+            }
 
             // Store tokens (API returns snake_case)
             localStorage.setItem('salt_token', data.access_token);
@@ -51,7 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             socketClient.connect(data.access_token);
 
             const user = data.user;
-            const frontendRole = roleMap[user.role] || 'TENANT_VENDEDOR';
+            const frontendRole = roleMap[user.role] || (user.role === 'master' ? 'SUPER_ADMIN_MASTER' : 'TENANT_VENDEDOR');
 
             // Store session for backward compatibility with useUserRole
             localStorage.setItem('salt_session', JSON.stringify({
@@ -69,7 +85,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
 
             // Determine redirect based on role
-            const redirectTo = user.role === 'super_admin' ? '/super-admin' : '/home';
+            const redirectTo = (user.role === 'master' || user.role === 'super_admin') ? '/super-admin' : '/home';
             return { redirectTo };
 
         } catch (error: any) {

@@ -8,6 +8,7 @@ const router = Router();
 
 // Public routes
 router.post('/login', validate({ body: loginSchema }), authController.login);
+router.post('/superadmin/login', validate({ body: loginSchema }), authController.superAdminLogin);
 router.post('/refresh', validate({ body: refreshSchema }), authController.refresh);
 
 // Protected routes

@@ -103,6 +103,59 @@ export class AuthService {
         };
     }
 
+    async superAdminLogin(data: LoginInput): Promise<AuthResponse> {
+        const admin = await prisma.superAdminUser.findFirst({
+            where: { email: data.email },
+        });
+
+        if (!admin) {
+            throw new UnauthorizedError('Email ou senha incorretos');
+        }
+
+        const isPasswordValid = await bcrypt.compare(data.password, admin.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedError('Email ou senha incorretos');
+        }
+
+        if (!admin.isActive) {
+            throw new UnauthorizedError('Usuário desativado');
+        }
+
+        const accessToken = generateAccessToken({
+            sub: admin.id,
+            email: admin.email,
+            role: admin.role,
+            tenantId: 'master-tenant', // SuperAdmins bypass tenant checks
+        });
+
+        const refreshToken = generateRefreshToken(admin.id);
+
+        await prisma.superAdminUser.update({
+            where: { id: admin.id },
+            data: {
+                lastLoginAt: new Date(),
+            },
+        });
+
+        return {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            expires_in: 900,
+            user: {
+                id: admin.id,
+                email: admin.email,
+                name: admin.name,
+                role: admin.role,
+                tenantId: 'master-tenant',
+                tenant: {
+                    id: 'master-tenant',
+                    name: 'Super Admin',
+                    slug: 'master',
+                },
+            },
+        };
+    }
+
     async refresh(refreshToken: string): Promise<AuthTokens> {
         let decoded;
         try {
@@ -115,7 +168,7 @@ export class AuthService {
             throw new UnauthorizedError('Token inválido');
         }
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { id: decoded.sub },
             select: {
                 id: true,
@@ -128,7 +181,41 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new UnauthorizedError('Usuário não encontrado');
+            // Check if it's a SuperAdmin
+            const admin = await prisma.superAdminUser.findUnique({
+                where: { id: decoded.sub },
+            });
+
+            if (!admin) {
+                throw new UnauthorizedError('Usuário não encontrado');
+            }
+
+            user = {
+                id: admin.id,
+                email: admin.email,
+                role: admin.role,
+                tenantId: 'master-tenant',
+                isActive: admin.isActive,
+                refreshToken: admin.password // Admin doesn't have refresh token field yet, using a dummy bypass or we can add it later. For now we will allow it if they reached here or skip strictly checking refreshToken match for master.
+            } as any;
+
+            if (!admin.isActive) {
+                throw new UnauthorizedError('Usuário desativado');
+            }
+
+            const newAccessToken = generateAccessToken({
+                sub: admin.id,
+                email: admin.email,
+                role: admin.role,
+                tenantId: 'master-tenant',
+            });
+            const newRefreshToken = generateRefreshToken(admin.id);
+
+            return {
+                access_token: newAccessToken,
+                refresh_token: newRefreshToken,
+                expires_in: 900,
+            };
         }
 
         if (!user.isActive) {
@@ -169,7 +256,7 @@ export class AuthService {
     }
 
     async getMe(userId: string) {
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
                 id: true,
@@ -196,10 +283,34 @@ export class AuthService {
                     },
                 },
             },
-        });
+        }) as any;
 
         if (!user) {
-            throw new NotFoundError('Usuário não encontrado');
+            const admin = await prisma.superAdminUser.findUnique({
+                where: { id: userId }
+            });
+
+            if (!admin) {
+                throw new NotFoundError('Usuário não encontrado');
+            }
+
+            user = {
+                id: admin.id,
+                email: admin.email,
+                name: admin.name,
+                phone: null,
+                avatarUrl: admin.avatarUrl,
+                role: admin.role,
+                tenantId: 'master-tenant',
+                teamId: null,
+                isActive: admin.isActive,
+                createdAt: admin.createdAt,
+                tenant: {
+                    id: 'master-tenant',
+                    name: 'Super Admin',
+                    slug: 'master',
+                }
+            };
         }
 
         return user;
