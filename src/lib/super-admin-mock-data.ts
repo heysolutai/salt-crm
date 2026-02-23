@@ -185,7 +185,7 @@ export const supportPriorityLabels: Record<SupportPriority, string> = {
 };
 
 // Legacy mappings placeholders
-export const nichePresets: any = {};
+export const nichePresets: any[] = [];
 export const availablePlans: any[] = [];
 export const legacyPlanMapping: any = {};
 
