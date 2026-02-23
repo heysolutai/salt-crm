@@ -2338,10 +2338,19 @@ const SuperAdmin: React.FC = () => {
   // Calculate tenants due in next 10 days and overdue
   const tenantsDueSoon = useMemo(() => {
     return tenants.filter(t => {
-      const dueDate = new Date(t.nextDueDate.split('/').reverse().join('-'));
-      const today = new Date();
-      const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays > 0 && diffDays <= 10 && t.paymentStatus === 'em_dia';
+      if (!t.nextDueDate) return false;
+      try {
+        const dateStr = typeof t.nextDueDate === 'string' && t.nextDueDate.includes('/')
+          ? t.nextDueDate.split('/').reverse().join('-')
+          : t.nextDueDate;
+        const dueDate = new Date(dateStr);
+        if (isNaN(dueDate.getTime())) return false;
+        const today = new Date();
+        const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays > 0 && diffDays <= 10 && t.paymentStatus === 'em_dia';
+      } catch {
+        return false;
+      }
     });
   }, [tenants]);
 
