@@ -201,11 +201,13 @@ const Outros: React.FC = () => {
           // Map API response to Component state shape if needed
           // API returns: { id, name, phoneNumber, status, ... }
           // Component expects: { id, name, phone, status, connectedAt? }
-          const mapped = response.data.map((c: any) => ({
+          // Fix: Ensure response.data is an array before mapping (prevents crashes if API returns 404 HTML or error objects)
+          const dataArray = Array.isArray(response.data) ? response.data : [];
+          const mapped: WhatsAppConnection[] = dataArray.map((c: any) => ({
             id: c.id,
             name: c.name,
             phone: c.phoneNumber,
-            status: c.status === 'connected' ? 'connected' : 'disconnected', // Normalize status
+            status: c.status === 'connected' ? 'connected' : 'disconnected', // Normalize status to match type
             connectedAt: c.createdAt
           }));
           setWhatsappConnections(mapped);
@@ -228,12 +230,12 @@ const Outros: React.FC = () => {
             if (agent.name === 'SDR') {
               setSdrAgentId(agent.id);
               if (agent.config?.sdrConfig) setSdrConfig(agent.config.sdrConfig);
-              if (agent.config?.sdrQuestions) setSdrQuestions(agent.config.sdrQuestions);
+              if (agent.config?.sdrQuestions) setSdrQuestions(Array.isArray(agent.config.sdrQuestions) ? agent.config.sdrQuestions : []);
               if (agent.config?.qualificationThreshold) setQualificationThreshold(agent.config.qualificationThreshold);
             } else if (agent.name === 'POS_VENDA') {
               setPosVendaAgentId(agent.id);
               if (agent.config?.posVendaConfig) setPosVendaConfig(agent.config.posVendaConfig);
-              if (agent.config?.posVendaQuestions) setPosVendaQuestions(agent.config.posVendaQuestions);
+              if (agent.config?.posVendaQuestions) setPosVendaQuestions(Array.isArray(agent.config.posVendaQuestions) ? agent.config.posVendaQuestions : []);
               if (agent.config?.posVendaThreshold) setPosVendaThreshold(agent.config.posVendaThreshold);
             } else if (agent.name === 'NPS') {
               setNpsAgentId(agent.id);
@@ -241,12 +243,12 @@ const Outros: React.FC = () => {
               if (agent.config?.npsBaseQuestion) {
                 // The base question config can be handled here if needed in future
               }
-              if (agent.config?.npsDetractorQuestions) setNpsDetractorQuestions(agent.config.npsDetractorQuestions);
-              if (agent.config?.npsNeutralQuestions) setNpsNeutralQuestions(agent.config.npsNeutralQuestions);
-              if (agent.config?.npsPromoterQuestions) setNpsPromoterQuestions(agent.config.npsPromoterQuestions);
+              if (agent.config?.npsDetractorQuestions) setNpsDetractorQuestions(Array.isArray(agent.config.npsDetractorQuestions) ? agent.config.npsDetractorQuestions : []);
+              if (agent.config?.npsNeutralQuestions) setNpsNeutralQuestions(Array.isArray(agent.config.npsNeutralQuestions) ? agent.config.npsNeutralQuestions : []);
+              if (agent.config?.npsPromoterQuestions) setNpsPromoterQuestions(Array.isArray(agent.config.npsPromoterQuestions) ? agent.config.npsPromoterQuestions : []);
             } else if (agent.name === 'FOLLOW_UP') {
               setFollowUpAgentId(agent.id);
-              if (agent.config?.followUpMessages) setFollowUpMessages(agent.config.followUpMessages);
+              if (agent.config?.followUpMessages) setFollowUpMessages(Array.isArray(agent.config.followUpMessages) ? agent.config.followUpMessages : []);
             }
           });
         })
