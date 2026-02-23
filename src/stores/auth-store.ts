@@ -4,6 +4,7 @@ import { socketClient } from '@/lib/socket';
 
 // Map backend roles to frontend role names
 const roleMap: Record<string, string> = {
+    master: 'SUPER_ADMIN_MASTER',
     admin: 'TENANT_ADMIN',
     manager: 'TENANT_GERENTE',
     agent: 'TENANT_VENDEDOR',
@@ -113,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
             const { data } = await api.get('/auth/me');
 
-            const frontendRole = roleMap[data.role] || 'TENANT_VENDEDOR';
+            const frontendRole = roleMap[data.role] || (data.role === 'master' ? 'SUPER_ADMIN_MASTER' : 'TENANT_VENDEDOR');
 
             // Keep session in sync
             localStorage.setItem('salt_session', JSON.stringify({
