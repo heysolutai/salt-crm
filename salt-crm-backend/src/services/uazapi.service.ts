@@ -8,6 +8,7 @@ interface UAZAPIConfig {
 
 export interface SendMessageParams {
     instanceId: string;
+    instanceToken: string;
     phone: string;
     message: string;
     mediaUrl?: string;
@@ -73,6 +74,9 @@ export class UAZAPIService {
         try {
             const result = await this.request<{ id: string }>('/send/text', {
                 method: 'POST',
+                headers: {
+                    'token': params.instanceToken
+                },
                 body: JSON.stringify({
                     instance: params.instanceId,
                     number: params.phone,
@@ -104,11 +108,15 @@ export class UAZAPIService {
         try {
             const result = await this.request<{ id: string }>('/send/media', {
                 method: 'POST',
+                headers: {
+                    'token': params.instanceToken
+                },
                 body: JSON.stringify({
                     instance: params.instanceId,
                     number: params.phone,
-                    url: params.mediaUrl,
-                    caption: params.message,
+                    type: params.mediaType,
+                    file: params.mediaUrl,
+                    text: params.message || '',
                 }),
             });
 
@@ -156,10 +164,13 @@ export class UAZAPIService {
     }
 
     // Send Presence Update
-    async sendPresence(instanceId: string, phone: string, isTyping: boolean): Promise<boolean> {
+    async sendPresence(instanceId: string, instanceToken: string, phone: string, isTyping: boolean): Promise<boolean> {
         try {
             await this.request('/message/presence', {
                 method: 'POST',
+                headers: {
+                    'token': instanceToken
+                },
                 body: JSON.stringify({
                     instance: instanceId,
                     number: phone,

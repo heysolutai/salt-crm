@@ -140,11 +140,12 @@ class WhatsappService {
      * Send a text message
      * POST /send/text (token header)
      */
-    async sendMessage(instanceToken: string, to: string, text: string) {
+    async sendMessage(instanceId: string, instanceToken: string, to: string, text: string) {
         try {
             const { uazapiService } = await import('../../services/uazapi.service.js');
             const response = await uazapiService.sendTextMessage({
-                instanceId: instanceToken, // The instance name is passed as token here usually
+                instanceId,
+                instanceToken,
                 phone: to,
                 message: text
             });
@@ -158,11 +159,12 @@ class WhatsappService {
     /**
      * Send a media message
      */
-    async sendMediaMessage(instanceToken: string, to: string, text: string, mediaUrl: string, mediaType: 'image' | 'audio' | 'video' | 'document') {
+    async sendMediaMessage(instanceId: string, instanceToken: string, to: string, text: string, mediaUrl: string, mediaType: 'image' | 'audio' | 'video' | 'document') {
         try {
             const { uazapiService } = await import('../../services/uazapi.service.js');
             const response = await uazapiService.sendMediaMessage({
-                instanceId: instanceToken,
+                instanceId,
+                instanceToken,
                 phone: to,
                 message: text,
                 mediaUrl,
@@ -178,10 +180,10 @@ class WhatsappService {
     /**
      * Send presence (typing/recording)
      */
-    async sendPresence(instanceToken: string, to: string, isTyping: boolean) {
+    async sendPresence(instanceId: string, instanceToken: string, to: string, isTyping: boolean) {
         try {
             const { uazapiService } = await import('../../services/uazapi.service.js');
-            return await uazapiService.sendPresence(instanceToken, to, isTyping);
+            return await uazapiService.sendPresence(instanceId, instanceToken, to, isTyping);
         } catch (error: any) {
             logger.error(`Error sending presence via uazapi:`, error.message);
             return false;

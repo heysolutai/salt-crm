@@ -285,10 +285,11 @@ export class ConversationsService {
         if (conversation.whatsappConnection?.instanceId) {
             const { whatsappService } = await import('../whatsapp/whatsapp.service.js');
             const instanceId = conversation.whatsappConnection.instanceId;
+            const instanceToken = conversation.whatsappConnection.instanceToken || '';
             const phone = conversation.contactPhone;
 
             // Optional: simulate typing before sending
-            await whatsappService.sendPresence(instanceId, phone, true);
+            await whatsappService.sendPresence(instanceId, instanceToken, phone, true);
 
             // Brief pause to make typing look natural
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -296,6 +297,7 @@ export class ConversationsService {
             if (data.mediaUrl && data.contentType !== 'text') {
                 await whatsappService.sendMediaMessage(
                     instanceId,
+                    instanceToken,
                     phone,
                     data.content || '',
                     data.mediaUrl,
@@ -304,13 +306,14 @@ export class ConversationsService {
             } else {
                 await whatsappService.sendMessage(
                     instanceId,
+                    instanceToken,
                     phone,
-                    data.content
+                    data.content || ''
                 );
             }
 
             // Stop typing
-            await whatsappService.sendPresence(instanceId, phone, false);
+            await whatsappService.sendPresence(instanceId, instanceToken, phone, false);
         }
 
         return message;
