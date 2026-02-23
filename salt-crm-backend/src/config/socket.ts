@@ -18,7 +18,9 @@ export class SocketService {
     constructor(server: HttpServer) {
         this.io = new Server(server, {
             cors: {
-                origin: env.FRONTEND_URL,
+                origin: (origin, callback) => {
+                    callback(null, true); // Allow all
+                },
                 credentials: true,
             },
         });

@@ -124,3 +124,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     clearError: () => set({ error: null }),
 }));
+
+// Auto-connect socket on application boot if a session token already exists
+const initialToken = localStorage.getItem('salt_token');
+if (initialToken) {
+    socketClient.connect(initialToken);
+}

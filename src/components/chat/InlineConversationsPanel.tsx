@@ -483,6 +483,12 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
     setSelectedConversation(conv);
     setActiveConversation(conv.id);
     setIsConversationRead(false);
+
+    // Join the backend real-time Socket.io room so new webhook messages stream here
+    import('@/lib/socket').then(({ socketClient }) => {
+      socketClient.joinConversation(conv.id);
+    });
+
     if (isMobile) {
       setShowMobileChat(true);
     }
