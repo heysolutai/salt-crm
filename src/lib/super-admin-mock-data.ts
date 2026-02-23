@@ -184,11 +184,66 @@ export const supportPriorityLabels: Record<SupportPriority, string> = {
   critica: 'Crítica'
 };
 
-// Legacy mappings placeholders
-export const nichePresets: any[] = [];
-export const availablePlans: any[] = [];
-export const legacyPlanMapping: any = {};
+// Niche presets for tenant creation
+export const nichePresets = [
+  { id: 'imobiliaria', name: 'Imobiliária' },
+  { id: 'saude', name: 'Saúde / Clínicas' },
+  { id: 'estetica', name: 'Estética' },
+  { id: 'automotivo', name: 'Automotivo' },
+  { id: 'fitness', name: 'Fitness' },
+  { id: 'educacao', name: 'Educação' },
+  { id: 'varejo', name: 'Varejo' },
+  { id: 'advocacia', name: 'Advocacia' },
+  { id: 'engenharia', name: 'Engenharia / Construção' },
+  { id: 'b2b_consultoria', name: 'Serviços B2B / Consultoria' },
+  { id: 'financeiro', name: 'Financeiro' },
+];
 
+export interface AvailablePlan {
+  id: PlanId;
+  name: string;
+  description: string;
+  monthlyPricePerUser: number;
+  annualPricePerUser: number;
+  baseUsers: number;
+  maxUsers: number | 'unlimited';
+  features: string[];
+}
+
+export const availablePlans: AvailablePlan[] = [
+  {
+    id: 'start',
+    name: 'Start',
+    description: 'Para pequenos times começando a vender',
+    monthlyPricePerUser: 97,
+    annualPricePerUser: 79,
+    baseUsers: 3,
+    maxUsers: 5,
+    features: ['CRM + Funil', 'WhatsApp (1 número)', 'Leads ilimitados'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    description: 'Para times em crescimento',
+    monthlyPricePerUser: 147,
+    annualPricePerUser: 119,
+    baseUsers: 5,
+    maxUsers: 20,
+    features: ['Tudo do Start', 'IA SDR + NPS', 'WhatsApp (3 números)', 'Relatórios avançados'],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'Para operações robustas',
+    monthlyPricePerUser: 197,
+    annualPricePerUser: 159,
+    baseUsers: 10,
+    maxUsers: 'unlimited',
+    features: ['Tudo do Pro', 'WhatsApp ilimitado', 'API completa', 'Suporte prioritário'],
+  },
+];
+
+export const legacyPlanMapping: any = {};
 // Mock Data (Vazios para limpar tela)
 
 export const mockCurrentSuperAdmin: SuperAdminUser = {

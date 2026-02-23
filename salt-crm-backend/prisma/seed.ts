@@ -6,15 +6,89 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Starting seed...');
 
+    // ============ PLANS ============
+    const plansData = [
+        {
+            name: 'start',
+            displayName: 'Start',
+            description: 'Para pequenos times começando a vender',
+            pricePerUserMonthly: 97.00,
+            pricePerUserAnnual: 79.00,
+            baseUsers: 3,
+            maxUsers: 5,
+            sortOrder: 1,
+            features: {
+                crm: true, funnel: true, whatsapp: true, whatsappLimit: 1,
+                leads: 'unlimited', ai_sdr: false, ai_nps: false,
+                reports: 'basic', api: false, support: 'standard',
+            },
+        },
+        {
+            name: 'pro',
+            displayName: 'Pro',
+            description: 'Para times em crescimento',
+            pricePerUserMonthly: 147.00,
+            pricePerUserAnnual: 119.00,
+            baseUsers: 5,
+            maxUsers: 20,
+            sortOrder: 2,
+            features: {
+                crm: true, funnel: true, whatsapp: true, whatsappLimit: 3,
+                leads: 'unlimited', ai_sdr: true, ai_nps: true,
+                reports: 'advanced', api: false, support: 'standard',
+            },
+        },
+        {
+            name: 'enterprise',
+            displayName: 'Enterprise',
+            description: 'Para operações robustas',
+            pricePerUserMonthly: 197.00,
+            pricePerUserAnnual: 159.00,
+            baseUsers: 10,
+            maxUsers: null,
+            sortOrder: 3,
+            features: {
+                crm: true, funnel: true, whatsapp: true, whatsappLimit: null,
+                leads: 'unlimited', ai_sdr: true, ai_nps: true,
+                reports: 'advanced', api: true, support: 'priority',
+            },
+        },
+    ];
+
+    for (const plan of plansData) {
+        await prisma.plan.upsert({
+            where: { name: plan.name },
+            update: {
+                displayName: plan.displayName,
+                description: plan.description,
+                pricePerUserMonthly: plan.pricePerUserMonthly,
+                pricePerUserAnnual: plan.pricePerUserAnnual,
+                baseUsers: plan.baseUsers,
+                maxUsers: plan.maxUsers,
+                sortOrder: plan.sortOrder,
+                features: plan.features,
+            },
+            create: plan,
+        });
+        console.log(`  ✅ Plan "${plan.displayName}" created/updated`);
+    }
+
+    // Get pro plan for tenant association
+    const proPlan = await prisma.plan.findUnique({ where: { name: 'pro' } });
+
     // Create default tenant
     const tenant = await prisma.tenant.upsert({
         where: { slug: 'salt-demo' },
-        update: {},
+        update: { planId: proPlan?.id },
         create: {
             name: 'SALT Demo',
             slug: 'salt-demo',
             email: 'contato@saltdigi.com.br',
             status: 'active',
+            planId: proPlan?.id,
+            segment: 'b2b_consultoria',
+            monthlyValue: 735.00,
+            usersLimit: 5,
         },
     });
 
