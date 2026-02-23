@@ -236,15 +236,12 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
         if (!message.mediaUrl && ['audio', 'video', 'image', 'document'].includes(message.contentType)) {
             try {
                 const { uazapiService } = await import('../../services/uazapi.service.js');
-                const base64Str = await uazapiService.getBase64MediaFromWebhookMessage(message.instanceId, connection.instanceToken || '', message.messageId);
-                if (base64Str) {
-                    const localUrl = uazapiService.saveBase64MediaLocally(base64Str, message.contentType);
-                    if (localUrl) {
-                        message.mediaUrl = localUrl;
-                    }
+                const mediaLink = await uazapiService.getMediaLinkFromWebhookMessage(message.instanceId, connection.instanceToken || '', message.messageId);
+                if (mediaLink) {
+                    message.mediaUrl = mediaLink;
                 }
             } catch (mediaErr) {
-                logger.error('Failed to dynamically fetch missing base64 media for webhook', mediaErr);
+                logger.error('Failed to dynamically fetch media link for webhook', mediaErr);
             }
         }
 

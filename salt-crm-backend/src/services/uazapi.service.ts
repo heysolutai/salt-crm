@@ -135,10 +135,10 @@ export class UAZAPIService {
         }
     }
 
-    // Fetch base64 from a media message
-    async getBase64MediaFromWebhookMessage(instanceName: string, instanceToken: string, messageId: string): Promise<string | null> {
+    // Fetch media link from a message
+    async getMediaLinkFromWebhookMessage(instanceName: string, instanceToken: string, messageId: string): Promise<string | null> {
         try {
-            logger.info(`Attempting to download media for message ${messageId} on instance ${instanceName}`);
+            logger.info(`Attempting to get media link for message ${messageId} on instance ${instanceName}`);
             const result = await this.request<any>(`/message/download`, {
                 method: 'POST',
                 headers: {
@@ -147,26 +147,27 @@ export class UAZAPIService {
                 body: JSON.stringify({
                     instance: instanceName,
                     id: messageId,
-                    return_base64: true,
-                    generate_mp3: true,
-                    return_link: false,
+                    return_base64: false,
+                    generate_mp3: false,
+                    return_link: true,
                     transcribe: false,
                     download_quoted: false
                 }),
             });
 
-            if (result && result.base64) {
-                logger.info(`Successfully downloaded and converted base64 media for message ${messageId}`);
-                return result.base64;
+            if (result && (result.url || result.link || result.base64)) {
+                const url = result.url || result.link || result.base64;
+                logger.info(`Successfully got media link for message ${messageId}: ${url}`);
+                return url;
             } else if (typeof result === 'string') {
-                logger.info(`Evolution API returned base64 string directly for message ${messageId}`);
+                logger.info(`Evolution API returned URL string directly for message ${messageId}: ${result}`);
                 return result;
             } else {
-                logger.warn(`Evolution API returned empty base64 for message ${messageId}: ${JSON.stringify(result)}`);
+                logger.warn(`Evolution API returned empty media link for message ${messageId}: ${JSON.stringify(result)}`);
             }
             return null;
         } catch (error) {
-            logger.error(`Failed to get base64 media for message ${messageId}:`, error);
+            logger.error(`Failed to get media link for message ${messageId}:`, error);
             return null;
         }
     }
