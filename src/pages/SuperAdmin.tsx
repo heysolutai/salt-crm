@@ -83,6 +83,7 @@ export interface NewTenantData {
   admin?: {
     name: string;
     email: string;
+    password?: string;
   };
 }
 
@@ -1202,6 +1203,24 @@ const TenantDetailModal: React.FC<{
   const [editedLifecycleStatus, setEditedLifecycleStatus] = useState<ClientLifecycleStatus>('ativo');
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | undefined>(undefined);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordUserId || !newPassword || newPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    try {
+      await api.post(`/superadmin/users/${resetPasswordUserId}/reset-password`, { newPassword });
+      toast.success('Senha alterada com sucesso!');
+      setResetPasswordUserId(null);
+      setNewPassword('');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Erro ao alterar senha');
+    }
+  };
 
   const handleOpenConnect = (connId?: string) => {
     setSelectedConnectionId(connId);
@@ -1505,6 +1524,7 @@ const TenantDetailModal: React.FC<{
                     <th className="text-left p-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">Papel</th>
                     <th className="text-left p-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">Status</th>
                     <th className="text-left p-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">Último Login</th>
+                    <th className="text-right p-3 text-[10px] uppercase tracking-widest text-muted-foreground/70 font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1522,11 +1542,44 @@ const TenantDetailModal: React.FC<{
                         </Badge>
                       </td>
                       <td className="p-3 text-xs text-muted-foreground">{user.lastLogin}</td>
+                      <td className="p-3 text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs text-muted-foreground hover:text-primary"
+                          onClick={() => setResetPasswordUserId(user.id)}
+                        >
+                          Alterar Senha
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            <Dialog open={!!resetPasswordUserId} onOpenChange={(open) => !open && setResetPasswordUserId(null)}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Alterar Senha do Usuário</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label>Nova Senha</Label>
+                    <Input
+                      type="password"
+                      placeholder="Mínimo de 6 caracteres"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" size="sm" onClick={() => setResetPasswordUserId(null)}>Cancelar</Button>
+                  <Button size="sm" onClick={handleResetPassword}>Salvar Senha</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="whatsapp" className="m-0 space-y-4">
@@ -2513,90 +2566,94 @@ const SuperAdmin: React.FC = () => {
     toast.success('Status atualizado');
   };
 
-  const handleToggleTenantStatus = (tenantId: string, currentStatus: string) => {
-    setTenants(prev => prev.map(tenant => {
-      if (tenant.id === tenantId) {
-        const newStatus = currentStatus === 'ativa' ? 'suspensa' : 'ativa';
-        toast.success(`Empresa ${newStatus === 'ativa' ? 'ativada' : 'suspensa'} com sucesso`);
-        return { ...tenant, status: newStatus as 'ativa' | 'suspensa' | 'cancelada' };
-      }
-      return tenant;
-    }));
+  const handleToggleTenantStatus = async (tenantId: string, currentStatus: string) => {
+    try {
+      const action = currentStatus === 'ativa' ? 'suspend' : 'activate';
+      await api.post(`/superadmin/tenants/${tenantId}/${action}`);
+      setTenants(prev => prev.map(tenant => {
+        if (tenant.id === tenantId) {
+          const newStatus = currentStatus === 'ativa' ? 'suspensa' : 'ativa';
+          return { ...tenant, status: newStatus as 'ativa' | 'suspensa' | 'cancelada' };
+        }
+        return tenant;
+      }));
+      toast.success(`Empresa ${currentStatus === 'ativa' ? 'suspensa' : 'ativada'} com sucesso`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao alterar status da empresa');
+    }
   };
 
-  const handleEnterAsAdmin = (tenant: Tenant) => {
-    toast.success(`Entrando como admin em ${tenant.name}...`);
-    setSelectedTenant(null);
+  const handleEnterAsAdmin = async (tenant: Tenant) => {
+    try {
+      toast.success(`Entrando como admin em ${tenant.name}...`);
+      const res = await api.post(`/superadmin/impersonate/${tenant.id}`);
+      const data = res.data;
+
+      localStorage.setItem('salt_token', data.access_token);
+      localStorage.setItem('salt_refresh_token', data.refresh_token);
+      localStorage.setItem('salt_session', JSON.stringify({
+        email: data.user.email,
+        loggedIn: true,
+        role: data.user.role,
+        name: data.user.name,
+      }));
+
+      window.location.href = '/home';
+    } catch (error: any) {
+      console.error('Impersonation error:', error);
+      toast.error(error.response?.data?.message || 'Erro ao personificar empresa');
+    }
   };
 
-  const handleCreateTenant = (data: NewTenantData) => {
-    // Generate new tenant with funnel config
-    const newTenant: Tenant = {
-      id: `t-${Date.now()}`,
-      name: data.name,
-      segment: NICHE_FUNNEL_PRESETS[data.nicheId].name,
-      plan: data.planId,
-      status: 'ativa',
-      lifecycleStatus: 'onboarding',
-      paymentStatus: 'em_dia',
-      monthlyValue: data.monthlyValue || (availablePlans.find(p => p.id === data.planId)?.monthlyPricePerUser || 199) * (data.userCount || 3),
-      usersActive: data.admin ? 1 : 0,
-      usersLimit: data.userCount || (availablePlans.find(p => p.id === data.planId)?.maxUsers === 'unlimited'
-        ? 999
-        : (availablePlans.find(p => p.id === data.planId)?.maxUsers as number) || 3),
-      whatsappsConnected: 0,
-      lastLogin: '-',
-      createdAt: new Date().toISOString().split('T')[0],
-      paymentMethod: '-',
-      lastPayment: '-',
-      nextDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      salesOrigin: 'Super Admin',
-      internalNotes: `Funil criado automaticamente: ${data.funnelConfig.nicheName}\n\nStatus principais:\n${data.funnelConfig.mainStatuses.map(s => `- ${s.label}`).join('\n')}\n\nStatus laterais:\n${data.funnelConfig.lateralStatuses.map(s => `- ${s.label}`).join('\n')}`,
-      onboarding: {
-        adminCreated: !!data.admin,
-        additionalUsersCreated: false,
-        whatsappConnected: false,
-        funnelConfigured: true, // Already configured via niche
-        iaConfigured: false,
-        firstLeadReceived: false,
-        firstServiceDone: false,
-      },
-      lastActivity: {
-        type: 'login',
-        occurredAt: new Date().toISOString(),
-      },
-      users: data.admin ? [{
-        id: `u-${Date.now()}`,
-        name: data.admin.name,
-        email: data.admin.email,
-        role: 'admin',
-        status: 'ativo',
-        lastLogin: '-',
-      }] : [],
-      modules: [],
-      whatsapps: [],
-      paymentHistory: [],
-      usageStats: {
-        activeToday: 0,
-        last7Days: 0,
-        last30Days: 0,
-        avgFrequency: '-',
-        churnRisk: 'baixo',
-      },
-      n8nFlows: [],
-    };
+  const handleCreateTenant = async (data: NewTenantData) => {
+    try {
+      const payload = {
+        name: data.name,
+        email: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
+        phone: '', // Not in UI
+        planId: data.planId,
+        monthlyValue: data.monthlyValue,
+        usersLimit: data.userCount,
+        segment: data.nicheId,
+        adminName: data.admin?.name,
+        adminEmail: data.admin?.email,
+        adminPassword: data.admin?.password,
+      };
 
-    setTenants(prev => [newTenant, ...prev]);
-    toast.success(`Empresa "${data.name}" criada com sucesso! Funil ${data.funnelConfig.nicheName} configurado automaticamente.`);
+      const res = await api.post('/superadmin/tenants', payload);
+      setTenants(prev => [res.data, ...prev]);
+      toast.success(`Empresa "${data.name}" criada com sucesso!`);
+      setShowNewTenantModal(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Erro ao criar empresa');
+    }
   };
 
-  const handleUpdateTenant = (tenantId: string, updates: Partial<Tenant>) => {
-    setTenants(prev => prev.map(tenant =>
-      tenant.id === tenantId ? { ...tenant, ...updates } : tenant
-    ));
+  const handleUpdateTenant = async (tenantId: string, updates: Partial<Tenant>) => {
+    try {
+      const payload: any = {};
+      if (updates.name) payload.name = updates.name;
+      if (updates.planId || updates.plan) payload.planId = updates.planId || (availablePlans.find(p => p.name === updates.plan)?.id);
+      if (updates.monthlyValue !== undefined) payload.monthlyValue = updates.monthlyValue;
+      if (updates.usersLimit !== undefined) payload.usersLimit = updates.usersLimit;
+      if (updates.internalNotes !== undefined) payload.internalNotes = updates.internalNotes;
+      if (updates.salesOrigin !== undefined) payload.salesOrigin = updates.salesOrigin;
+      if (updates.segment !== undefined) payload.segment = updates.segment;
 
-    // Keep selectedTenant in sync so modals update instantly (e.g. checklist toggles)
-    setSelectedTenant(prev => (prev?.id === tenantId ? { ...prev, ...updates } : prev));
+      const res = await api.put(`/superadmin/tenants/${tenantId}`, payload);
+
+      setTenants(prev => prev.map(tenant =>
+        tenant.id === tenantId ? { ...tenant, ...res.data } : tenant
+      ));
+
+      setSelectedTenant(prev => (prev?.id === tenantId ? { ...prev, ...res.data } : prev));
+      toast.success('Empresa atualizada com sucesso');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Erro ao atualizar empresa');
+    }
   };
 
   const handleKpiClick = (filter: KPIFilter) => {

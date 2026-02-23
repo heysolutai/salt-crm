@@ -131,6 +131,15 @@ export interface Tenant {
     status: 'ativo' | 'inativo';
     lastRun: string;
   }[];
+  usageStats?: {
+    activeToday: number;
+    last7Days: number;
+    last30Days: number;
+    avgFrequency: string;
+    churnRisk: string;
+  };
+  lastPayment?: string;
+  nextDueDate?: string;
 }
 
 export interface FinancialKPIs {
