@@ -248,6 +248,7 @@ export class ConversationsService {
             },
             select: {
                 id: true,
+                externalId: true,
                 direction: true,
                 senderType: true,
                 content: true,
@@ -294,8 +295,10 @@ export class ConversationsService {
             // Brief pause to make typing look natural
             await new Promise(resolve => setTimeout(resolve, 500));
 
+            let whatsappResponse;
+
             if (data.mediaUrl && data.contentType !== 'text') {
-                await whatsappService.sendMediaMessage(
+                whatsappResponse = await whatsappService.sendMediaMessage(
                     instanceId,
                     instanceToken,
                     phone,
@@ -304,12 +307,21 @@ export class ConversationsService {
                     data.contentType as 'image' | 'audio' | 'video' | 'document'
                 );
             } else {
-                await whatsappService.sendMessage(
+                whatsappResponse = await whatsappService.sendMessage(
                     instanceId,
                     instanceToken,
                     phone,
                     data.content || ''
                 );
+            }
+
+            // Update the temporary ID with the real Evolution API message ID to prevent webhook duplicates
+            if (whatsappResponse?.messageId) {
+                await prisma.message.update({
+                    where: { id: message.id },
+                    data: { externalId: whatsappResponse.messageId }
+                });
+                message.externalId = whatsappResponse.messageId;
             }
 
             // Stop typing

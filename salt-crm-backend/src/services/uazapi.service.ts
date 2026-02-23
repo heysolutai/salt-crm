@@ -136,14 +136,15 @@ export class UAZAPIService {
     }
 
     // Fetch base64 from a media message
-    async getBase64MediaFromWebhookMessage(instanceName: string, messageId: string): Promise<string | null> {
+    async getBase64MediaFromWebhookMessage(instanceName: string, instanceToken: string, messageId: string): Promise<string | null> {
         try {
             const result = await this.request<any>(`/message/download`, {
                 method: 'POST',
                 headers: {
-                    'apikey': this.config.apiKey // Some Uazapi roots expect 'apikey' over Bearer in this route
+                    'token': instanceToken
                 },
                 body: JSON.stringify({
+                    instance: instanceName,
                     id: messageId,
                     return_base64: true,
                     generate_mp3: true,

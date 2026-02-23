@@ -236,7 +236,7 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
         if (!message.mediaUrl && ['audio', 'video', 'image', 'document'].includes(message.contentType)) {
             try {
                 const { uazapiService } = await import('../../services/uazapi.service.js');
-                const base64Str = await uazapiService.getBase64MediaFromWebhookMessage(message.instanceId, message.messageId);
+                const base64Str = await uazapiService.getBase64MediaFromWebhookMessage(message.instanceId, connection.instanceToken || '', message.messageId);
                 if (base64Str) {
                     const localUrl = uazapiService.saveBase64MediaLocally(base64Str, message.contentType);
                     if (localUrl) {

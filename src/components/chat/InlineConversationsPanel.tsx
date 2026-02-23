@@ -1179,7 +1179,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   );
 
   // Chat area component - WhatsApp style
-  const ChatArea = () => (
+  const renderChatArea = () => (
     <div className={cn(
       "flex flex-col flex-1 min-w-0 bg-[#efeae2] dark:bg-[#0b141a]",
       isMobile && "h-full"
@@ -1601,7 +1601,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   // Mobile fullscreen chat mode - renders chat in fixed fullscreen overlay
   const mobileFullscreenChat = isMobile && showMobileChat && (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#efeae2] dark:bg-[#0b141a]" style={{ paddingTop: 'var(--safe-area-top)', paddingBottom: 'var(--safe-area-bottom)' }}>
-      <ChatArea />
+      {renderChatArea()}
     </div>
   );
 
@@ -1691,7 +1691,7 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
           ) : (
             <>
               <ConversationList />
-              <ChatArea />
+              {renderChatArea()}
             </>
           )}
         </div>
