@@ -57,7 +57,7 @@ interface ChatState {
     setActiveConversation: (id: string | null) => void;
     fetchConversations: () => Promise<void>;
     fetchMessages: (conversationId: string) => Promise<void>;
-    sendMessage: (conversationId: string, content: string, contentType?: string) => Promise<void>;
+    sendMessage: (conversationId: string, content: string, contentType?: string, mediaUrl?: string) => Promise<void>;
     markAsRead: (conversationId: string) => Promise<void>;
 
     // Socket handlers

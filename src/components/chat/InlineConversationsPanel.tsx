@@ -329,6 +329,8 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
   const messages = selectedConversation ? (storeMessages[selectedConversation.id] || []).map(m => ({
     id: m.id,
     content: m.content || '',
+    contentType: m.contentType || 'text',
+    mediaUrl: m.mediaUrl,
     sender: (m.direction === 'inbound' ? 'client' : 'agent') as 'client' | 'agent',
     agentName: m.sender?.name || 'Você',
     timestamp: new Date(m.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -1429,7 +1431,30 @@ export const InlineConversationsPanel: React.FC<InlineConversationsPanelProps> =
                           boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
                         }}
                       >
-                        <p className="text-[14.2px] whitespace-pre-wrap break-words leading-[19px]">{msg.content}</p>
+                        {msg.contentType === 'audio' && msg.mediaUrl ? (
+                          <div className="mb-1 w-[250px]">
+                            <audio src={msg.mediaUrl} controls className="h-10 w-full" />
+                          </div>
+                        ) : msg.contentType === 'image' && msg.mediaUrl ? (
+                          <div className="mb-1">
+                            <img src={msg.mediaUrl} alt="Imagem enviada" className="max-w-[250px] rounded-md" />
+                          </div>
+                        ) : msg.contentType === 'video' && msg.mediaUrl ? (
+                          <div className="mb-1">
+                            <video src={msg.mediaUrl} controls className="max-w-[250px] rounded-md" />
+                          </div>
+                        ) : msg.contentType === 'document' && msg.mediaUrl ? (
+                          <div className="mb-1 flex items-center gap-2 p-2 bg-black/5 rounded-md">
+                            <FileText className="w-5 h-5" />
+                            <a href={msg.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm truncate max-w-[200px]">
+                              Baixar Documento
+                            </a>
+                          </div>
+                        ) : null}
+
+                        {msg.content && !msg.content.startsWith('🎤 Áudio') && !msg.content.startsWith('📎 Anexo:') && (
+                          <p className="text-[14.2px] whitespace-pre-wrap break-words leading-[19px]">{msg.content}</p>
+                        )}
                         <div className={cn(
                           "flex items-center gap-1 mt-0.5",
                           msg.sender === 'agent' ? "justify-end" : "justify-start"
