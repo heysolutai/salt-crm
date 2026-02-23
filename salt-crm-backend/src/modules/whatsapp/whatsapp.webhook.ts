@@ -186,7 +186,7 @@ export async function handleUazapiWebhook(req: Request, res: Response) {
                         tenantId,
                         funnelId: defaultFunnel.id,
                         stageId: defaultStage.id,
-                        name: (!message.fromMe && message.senderName) ? message.senderName : message.phone,
+                        name: (!message.fromMe && message.senderName) ? message.senderName : (message.contactName || message.phone),
                         phone: message.phone,
                     },
                 });

@@ -30,8 +30,10 @@ interface WebhookMessage {
     timestamp: number;
     isGroup: boolean;
     senderName?: string;
+    contactName?: string;
     chatLid?: string;
     fromMe?: boolean;
+    rawMessage?: any;
 }
 
 export class UAZAPIService {
@@ -124,17 +126,13 @@ export class UAZAPIService {
         }
     }
 
-    // Fetch base64 from a media message id
-    async getBase64MediaFromWebhookMessage(instanceId: string, messageId: string): Promise<string | null> {
+    // Fetch base64 from a media message
+    async getBase64MediaFromWebhookMessage(instanceId: string, message: any): Promise<string | null> {
         try {
             const result = await this.request<{ base64: string }>(`/chat/getBase64FromMediaMessage/${instanceId}`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    message: {
-                        key: {
-                            id: messageId
-                        }
-                    }
+                    message
                 }),
             });
 
@@ -143,7 +141,7 @@ export class UAZAPIService {
             }
             return null;
         } catch (error) {
-            logger.error(`Failed to get base64 media for message ${messageId}:`, error);
+            logger.error(`Failed to get base64 media for message ${message?.key?.id}:`, error);
             return null;
         }
     }
@@ -307,9 +305,11 @@ export class UAZAPIService {
                 mediaUrl,
                 timestamp: message.messageTimestamp || Date.now(),
                 isGroup,
-                senderName: message.pushName || message.senderName || chat?.wa_name || chat?.wa_contactName,
+                senderName: message.pushName || message.senderName || chat?.wa_name || chat?.name || chat?.wa_contactName,
+                contactName: chat?.name || chat?.wa_name || chat?.wa_contactName,
                 chatLid: message.sender_lid || message.chatlid || chat?.wa_chatlid,
-                fromMe
+                fromMe,
+                rawMessage: message
             };
         } catch (error) {
             logger.error('Failed to parse webhook message:', error);
