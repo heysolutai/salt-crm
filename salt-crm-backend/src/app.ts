@@ -12,6 +12,7 @@ import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { webhookRoutes } from './modules/webhooks/webhook.routes.js';
 import { uploadRoutes } from './modules/upload/upload.routes.js';
 import { agentsRouter } from './modules/agents/agents.routes.js';
+import { superAdminRoutes } from './modules/superadmin/superadmin.routes.js';
 import { logger } from './utils/logger.js';
 
 const app = express();
@@ -79,6 +80,7 @@ apiRouter.use('/leads', leadsRoutes);
 apiRouter.use('/conversations', conversationsRoutes);
 apiRouter.use('/whatsapp', whatsappRoutes);
 apiRouter.use('/agents', agentsRouter);
+apiRouter.use('/superadmin', superAdminRoutes);
 
 app.use('/api/v1', apiRouter);
 

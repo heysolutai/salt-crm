@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import saltLogo from '@/assets/salt-logo.png';
+import api from '@/lib/api';
 import {
   mockCurrentSuperAdmin,
   mockDashboardKPIs,
@@ -2285,13 +2286,41 @@ const SuperAdmin: React.FC = () => {
   const [supportPanelFilter, setSupportPanelFilter] = useState<'all' | 'aberto' | 'critica'>('all');
   const [kpiFilter, setKpiFilter] = useState<KPIFilter>(null);
 
-  // State for tenants, alerts, internal users (mutable for demo)
-  const [tenants, setTenants] = useState<Tenant[]>(mockTenants);
+  // State for tenants, alerts, internal users
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [alerts, setAlerts] = useState<CriticalAlert[]>(mockCriticalAlerts);
   const [internalUsers, setInternalUsers] = useState<SuperAdminUser[]>(mockSuperAdminUsers);
+  const [dashboardKPIs, setDashboardKPIs] = useState(mockDashboardKPIs);
+  const [financialKPIs, setFinancialKPIs] = useState(mockFinancialKPIs);
+  const [isLoadingTenants, setIsLoadingTenants] = useState(true);
 
   // Support tickets from shared store
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(supportTicketsApi.getAll());
+
+  // Fetch real data from backend API
+  useEffect(() => {
+    // Fetch tenants
+    api.get('/superadmin/tenants')
+      .then(res => {
+        const data = Array.isArray(res.data) ? res.data : [];
+        setTenants(data);
+      })
+      .catch(err => {
+        console.error('Error fetching tenants:', err);
+        setTenants(mockTenants); // Fallback to mock
+      })
+      .finally(() => setIsLoadingTenants(false));
+
+    // Fetch KPIs
+    api.get('/superadmin/kpis')
+      .then(res => {
+        if (res.data?.dashboard) setDashboardKPIs(res.data.dashboard);
+        if (res.data?.financial) setFinancialKPIs(res.data.financial);
+      })
+      .catch(err => {
+        console.error('Error fetching KPIs:', err);
+      });
+  }, []);
 
   // Subscribe to support tickets changes
   useEffect(() => {
