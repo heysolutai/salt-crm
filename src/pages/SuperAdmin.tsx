@@ -803,7 +803,7 @@ const WhatsAppDisconnectedModal: React.FC<{
   onSelectTenant: (tenant: Tenant) => void;
 }> = ({ open, onClose, tenants, onSelectTenant }) => {
   const disconnectedList = tenants.flatMap(tenant =>
-    tenant.whatsapps
+    (tenant.whatsappConnections || [])
       .filter(wa => wa.status === 'desconectado')
       .map(wa => ({ ...wa, tenantName: tenant.name, tenantId: tenant.id, tenant }))
   );
@@ -2774,9 +2774,9 @@ const SuperAdmin: React.FC = () => {
             />
             <KPICard
               label="WA Desconectados"
-              value={tenants.reduce((acc, t) => acc + t.whatsapps.filter(w => w.status === 'desconectado').length, 0)}
+              value={tenants.reduce((acc, t) => acc + (t.whatsappConnections || []).filter(w => w.status === 'desconectado').length, 0)}
               icon={<WifiOff className="w-4 h-4" />}
-              variant={tenants.some(t => t.whatsapps.some(w => w.status === 'desconectado')) ? 'warning' : 'default'}
+              variant={tenants.some(t => (t.whatsappConnections || []).some(w => w.status === 'desconectado')) ? 'warning' : 'default'}
               onClick={() => setShowWhatsAppModal(true)}
             />
             <KPICard
