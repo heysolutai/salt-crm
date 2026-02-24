@@ -2630,7 +2630,7 @@ const SuperAdmin: React.FC = () => {
         name: data.name,
         email: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
         phone: '',
-        planId: data.planId,
+        planId: data.planId && data.planId.length === 36 ? data.planId : undefined,
         monthlyValue: Number(data.monthlyValue),
         usersLimit: Number(data.userCount),
         segment: data.nicheId,
@@ -2657,7 +2657,10 @@ const SuperAdmin: React.FC = () => {
     try {
       const payload: any = {};
       if (updates.name) payload.name = updates.name;
-      if (updates.planId || updates.plan) payload.planId = updates.planId || (availablePlans.find(p => p.name === updates.plan)?.id);
+      if (updates.planId || updates.plan) {
+        const potentialPlanId = updates.planId || (availablePlans.find(p => p.name === updates.plan)?.id);
+        if (potentialPlanId && potentialPlanId.length === 36) payload.planId = potentialPlanId;
+      }
       if (updates.monthlyValue !== undefined) payload.monthlyValue = updates.monthlyValue;
       if (updates.usersLimit !== undefined) payload.usersLimit = updates.usersLimit;
       if (updates.internalNotes !== undefined) payload.internalNotes = updates.internalNotes;
