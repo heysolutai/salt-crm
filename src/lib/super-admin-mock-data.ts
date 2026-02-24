@@ -4,7 +4,7 @@ export type SuperAdminRole = 'SUPER_ADMIN_MASTER' | 'SUPER_ADMIN_OPERACIONAL';
 export type ClientLifecycleStatus = 'onboarding' | 'active' | 'risk' | 'overdue' | 'suspended' | 'cancelled';
 export type SupportPriority = 'baixa' | 'media' | 'alta' | 'critica';
 export type SupportStatus = 'aberto' | 'em_andamento' | 'resolvido';
-export type SupportType = 'whatsapp' | 'ia' | 'billing' | 'tecnico' | 'outro';
+export type SupportType = 'whatsapp' | 'ia' | 'billing' | 'tecnico' | 'financeiro' | 'funil' | 'outro';
 export type ActivityType = 'login' | 'lead_created' | 'sale_closed' | 'message_sent';
 export type PlanId = 'start' | 'pro' | 'enterprise';
 
@@ -183,6 +183,8 @@ export const supportTypeLabels: Record<SupportType, string> = {
   ia: 'Inteligência Artificial',
   billing: 'Financeiro',
   tecnico: 'Técnico',
+  financeiro: 'Financeiro',
+  funil: 'Funil',
   outro: 'Outro'
 };
 
