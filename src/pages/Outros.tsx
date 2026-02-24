@@ -203,7 +203,7 @@ const Outros: React.FC = () => {
           // Component expects: { id, name, phone, status, connectedAt? }
           // Fix: Ensure response.data is an array before mapping (prevents crashes if API returns 404 HTML or error objects)
           const dataArray = Array.isArray(response.data) ? response.data : [];
-          const mapped: WhatsAppConnection[] = dataArray.map((c: any) => ({
+          const mapped: WhatsAppConnection[] = dataArray?.map((c: any) => ({
             id: c.id,
             name: c.name,
             phone: c.phoneNumber,
@@ -564,7 +564,7 @@ const Outros: React.FC = () => {
 
     // Generate questions section dynamically - only active questions
     const activeQuestions = sdrQuestions.filter(q => q.active);
-    const questionsSection = activeQuestions.map((q, i) =>
+    const questionsSection = activeQuestions?.map((q, i) =>
       `Pergunta ${i + 1}: ${q.question}`
     ).join('\n');
 
@@ -688,7 +688,7 @@ TOOLS DISPONÍVEIS:
       posVendaConfig[key] || `{{${variable}}}`;
 
     const activeQuestions = posVendaQuestions.filter(q => q.active);
-    const questionsSection = activeQuestions.map((q, i) =>
+    const questionsSection = activeQuestions?.map((q, i) =>
       `Pergunta ${i + 1}: ${q.question}`
     ).join('\n');
 
@@ -1403,7 +1403,7 @@ TOOLS DISPONÍVEIS:
               </div>
             </div>
             <div className="divide-y divide-border/10">
-              {npsDetractorQuestions.map((question, index) => (
+              {npsDetractorQuestions?.map((question, index) => (
                 <div key={question.id} className="px-4 py-3">
                   {editingNpsQuestion === question.id && editingNpsQuestionType === 'detractor' ? (
                     <div className="space-y-3">
@@ -1501,7 +1501,7 @@ TOOLS DISPONÍVEIS:
               </div>
             </div>
             <div className="divide-y divide-border/10">
-              {npsNeutralQuestions.map((question, index) => (
+              {npsNeutralQuestions?.map((question, index) => (
                 <div key={question.id} className="px-4 py-3">
                   {editingNpsQuestion === question.id && editingNpsQuestionType === 'neutral' ? (
                     <div className="space-y-3">
@@ -1599,7 +1599,7 @@ TOOLS DISPONÍVEIS:
               </div>
             </div>
             <div className="divide-y divide-border/10">
-              {npsPromoterQuestions.map((question, index) => (
+              {npsPromoterQuestions?.map((question, index) => (
                 <div key={question.id} className="px-4 py-3">
                   {editingNpsQuestion === question.id && editingNpsQuestionType === 'promoter' ? (
                     <div className="space-y-3">
@@ -2067,7 +2067,7 @@ TOOLS DISPONÍVEIS:
       // Refresh list to check status
       try {
         const response = await whatsappApi.getAll();
-        const mapped = response.data.map((c: any) => ({
+        const mapped = response.data?.map((c: any) => ({
           id: c.id,
           name: c.name,
           phone: c.phoneNumber,
@@ -2197,7 +2197,7 @@ TOOLS DISPONÍVEIS:
               <h3 className="text-[12px] font-medium text-muted-foreground/60 uppercase tracking-wide px-1">
                 Caixas de Entrada
               </h3>
-              {whatsappConnections.map(connection => (
+              {whatsappConnections?.map(connection => (
                 <div
                   key={connection.id}
                   className="bg-card rounded-xl p-4 border border-border/20"
@@ -3212,7 +3212,7 @@ TOOLS DISPONÍVEIS:
           >
             <h3 className="text-[13px] font-semibold text-foreground/80 mb-3">Recursos Incluídos</h3>
             <div className="space-y-2">
-              {planFeatures.map((feature, index) => (
+              {planFeatures?.map((feature, index) => (
                 <div key={index} className="flex items-center gap-2.5 py-1.5">
                   {feature.included ? (
                     <CheckCircle2 className="w-4 h-4 text-success" />
@@ -3274,7 +3274,7 @@ TOOLS DISPONÍVEIS:
               className="bg-card rounded-xl overflow-hidden divide-y divide-border/10"
               style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
-              {invoices.map((invoice) => (
+              {invoices?.map((invoice) => (
                 <div key={invoice.id} className="px-3 py-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[14px] font-medium text-foreground/90">{invoice.month}</span>
@@ -3547,7 +3547,7 @@ TOOLS DISPONÍVEIS:
                 Seus Chamados ({tenantTickets.length})
               </h2>
               <div className="space-y-2">
-                {tenantTickets.map((ticket) => {
+                {tenantTickets?.map((ticket) => {
                   const statusBadge = getStatusBadge(ticket.status);
                   const priorityBadge = getPriorityBadge(ticket.priority);
 
@@ -3699,7 +3699,7 @@ TOOLS DISPONÍVEIS:
             </div>
           </div>
 
-          {servicos.map((servico) => {
+          {servicos?.map((servico) => {
             const IconComponent = servico.icon;
             return (
               <div
@@ -3925,7 +3925,7 @@ TOOLS DISPONÍVEIS:
             </div>
 
             <div className="divide-y divide-border/10">
-              {posVendaQuestions.map((question, index) => (
+              {posVendaQuestions?.map((question, index) => (
                 <div key={question.id} className="px-4 py-3">
                   {editingPosVendaQuestion === question.id ? (
                     <div className="space-y-3">
@@ -4068,7 +4068,7 @@ TOOLS DISPONÍVEIS:
         </IOSSection>
 
         <IOSSection title="Inteligência Artificial">
-          {menuItems.slice(0, 5).map((item) => (
+          {menuItems.slice(0, 5)?.map((item) => (
             <IOSSectionItem
               key={item.id}
               icon={item.icon}
@@ -4082,7 +4082,7 @@ TOOLS DISPONÍVEIS:
         </IOSSection>
 
         <IOSSection title="Gestão">
-          {menuItems.slice(5, 7).map((item) => (
+          {menuItems.slice(5, 7)?.map((item) => (
             <IOSSectionItem
               key={item.id}
               icon={item.icon}
@@ -4096,7 +4096,7 @@ TOOLS DISPONÍVEIS:
         </IOSSection>
 
         <IOSSection title="Configurações">
-          {menuItems.slice(7, 12).map((item) => (
+          {menuItems.slice(7, 12)?.map((item) => (
             <IOSSectionItem
               key={item.id}
               icon={item.icon}
@@ -4110,7 +4110,7 @@ TOOLS DISPONÍVEIS:
         </IOSSection>
 
         <IOSSection title="SALT">
-          {menuItems.slice(12).map((item) => (
+          {menuItems.slice(12)?.map((item) => (
             <IOSSectionItem
               key={item.id}
               icon={item.icon}
