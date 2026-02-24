@@ -2612,7 +2612,7 @@ const SuperAdmin: React.FC = () => {
         name: data.name,
         email: data.admin?.email || 'admin@' + data.name.toLowerCase().replace(/\s/g, '').replace(/[^\w]/g, '') + '.com',
         phone: '', // Not in UI
-        planId: data.planId,
+        planId: data.planId && data.planId.length === 36 ? data.planId : undefined,
         monthlyValue: Number(data.monthlyValue),
         usersLimit: Number(data.userCount),
         segment: data.nicheId,
