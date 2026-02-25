@@ -256,6 +256,9 @@ const Outros: React.FC = () => {
     }
   }, [activeSection]);
 
+  // Estado para QR code de conexão (deve ser declarado ANTES do useEffect que o usa)
+  const [showQrCodeForConnection, setShowQrCodeForConnection] = useState<string | null>(null);
+
   // Socket.io listener for instant WhatsApp connection status updates
   useEffect(() => {
     const handleWhatsappStatus = (data: { connectionId: string, instanceName: string, status: string }) => {
@@ -285,7 +288,7 @@ const Outros: React.FC = () => {
   // Estado para adicionar nova conexão
   const [showNewConnectionForm, setShowNewConnectionForm] = useState(false);
   const [newConnectionName, setNewConnectionName] = useState('');
-  const [showQrCodeForConnection, setShowQrCodeForConnection] = useState<string | null>(null);
+  // showQrCodeForConnection moved above the useEffect that references it
 
   // WhatsApp API state
   const [whatsappApiForm, setWhatsappApiForm] = useState({
